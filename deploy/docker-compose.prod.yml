@@ -6,7 +6,7 @@ services:
   # Applique le SQL de CoachSen à la base Supabase avant chaque démarrage de l'API (scripts/migrate-production.mjs).
   # Chaque fichier ne passe qu'une fois (registre public.schema_migrations). Si un fichier échoue, l'API ne démarre pas.
   migrate:
-    image: ghcr.io/${GHCR_OWNER}/coachsen-api:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-youngerdiarrandiaye}/coachsen-api:${IMAGE_TAG:-latest}
     command: ["node", "scripts/migrate-production.mjs"]
     restart: "no"
     environment:
@@ -17,7 +17,7 @@ services:
     mem_limit: 128m
 
   api:
-    image: ghcr.io/${GHCR_OWNER}/coachsen-api:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-youngerdiarrandiaye}/coachsen-api:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       migrate:
@@ -44,7 +44,7 @@ services:
     cpus: 1.0
 
   web:
-    image: ghcr.io/${GHCR_OWNER}/coachsen-web:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-youngerdiarrandiaye}/coachsen-web:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on: [api]
     expose: ["80"]          # domaine HTTPS configuré sur ce service dans Coolify (port 80)
@@ -52,7 +52,7 @@ services:
     mem_limit: 128m
 
   scheduler:
-    image: ghcr.io/${GHCR_OWNER}/coachsen-scheduler:${IMAGE_TAG:-latest}
+    image: ghcr.io/${GHCR_OWNER:-youngerdiarrandiaye}/coachsen-scheduler:${IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on: [api]
     environment:
