@@ -3,9 +3,25 @@
 # Dans Coolify : ressource « Docker Compose » pointant sur ce fichier. Variables : voir docs/DEPLOIEMENT_COOLIFY.md.
 name: coachsen
 services:
+  # Applique le SQL de CoachSen à la base Supabase avant chaque démarrage de l'API (scripts/migrate-production.mjs).
+  # Chaque fichier ne passe qu'une fois (registre public.schema_migrations). Si un fichier échoue, l'API ne démarre pas.
+  migrate:
+    image: ghcr.io/${GHCR_OWNER}/coachsen-api:${IMAGE_TAG:-latest}
+    command: ["node", "scripts/migrate-production.mjs"]
+    restart: "no"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      MIGRATE_BASELINE: ${MIGRATE_BASELINE:-0}
+    networks: [coachsen]
+    mem_limit: 128m
+
   api:
     image: ghcr.io/${GHCR_OWNER}/coachsen-api:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     environment:
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}

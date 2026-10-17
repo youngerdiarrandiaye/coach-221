@@ -9,21 +9,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { MIGRATIONS } from './migrations-list.mjs'
 
 const root = new URL('../', import.meta.url)
 const out = new URL(process.argv[2] ?? 'deploy/coachsen-production.sql', root)
-const files = [
-  'schema.sql',
-  'recurrences.sql',
-  'migrations/add_progress_metrics.sql',
-  'migrations/20260909_reliability.sql',
-  'migrations/20261012_workout_logs.sql',
-  'migrations/20261013_push_reminders.sql',
-  'migrations/20261014_agenda.sql',
-  'migrations/20261015_hardening.sql',
-  'migrations/20261016_frequent_activity.sql',
-  'storage.sql',
-]
+const files = MIGRATIONS
 const parts = [`-- CoachSen : base de production NEUVE. Généré par scripts/build-production-sql.mjs.
 -- À jouer UNE SEULE FOIS sur une base vide (Supabase dédié à CoachSen), après une sauvegarde.
 -- Ne jamais le jouer sur la base d'une autre application.

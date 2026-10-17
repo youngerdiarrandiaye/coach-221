@@ -27,6 +27,9 @@ RUN addgroup -S coachsen && adduser -S coachsen -G coachsen
 COPY --from=build --chown=coachsen:coachsen /app/.next/standalone ./
 COPY --from=build --chown=coachsen:coachsen /app/.next/static ./.next/static
 COPY --from=build --chown=coachsen:coachsen /app/public ./public
+# Migrations automatiques (service « migrate » du compose) : script sans dépendance et fichiers SQL
+COPY --from=build --chown=coachsen:coachsen /app/scripts/migrate-production.mjs /app/scripts/migrations-list.mjs ./scripts/
+COPY --from=build --chown=coachsen:coachsen /app/supabase ./supabase
 USER coachsen
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://127.0.0.1:3000/ >/dev/null 2>&1 || exit 1

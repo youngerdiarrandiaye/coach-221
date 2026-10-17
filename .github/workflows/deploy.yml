@@ -82,11 +82,23 @@ jobs:
       COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
       SITE_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Contrôler la configuration
         run: |
           for v in COOLIFY_URL COOLIFY_APP_UUID COOLIFY_API_TOKEN SITE_URL; do
             [ -n "${!v}" ] || { echo "::error::$v manquant (secrets ou variables du dépôt)"; exit 1; }
           done
+
+      - name: Synchroniser le fichier de composition (dépôt vers Coolify)
+        run: |
+          # Le dépôt est la référence : Coolify garde sa propre copie du compose, mise à jour à chaque déploiement.
+          compose=$(base64 -w0 deploy/docker-compose.prod.yml)
+          code=$(curl -sS -o /tmp/c.json -w '%{http_code}' -X PATCH "${COOLIFY_URL%/}/api/v1/services/${COOLIFY_APP_UUID}" \
+            -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" -H 'Content-Type: application/json' -H 'Accept: application/json' \
+            -d "{\"docker_compose_raw\":\"${compose}\"}")
+          [ "$code" -lt 300 ] || { echo "::error::Coolify a refusé le fichier de composition (HTTP $code)"; cat /tmp/c.json; exit 1; }
+          echo "Fichier de composition synchronisé."
 
       - name: Fixer la version à déployer (IMAGE_TAG = commit)
         run: |
