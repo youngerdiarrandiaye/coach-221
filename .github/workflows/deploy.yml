@@ -108,7 +108,8 @@ jobs:
 
       - name: Déclencher le déploiement dans Coolify
         run: |
-          curl -fsS -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" \
+          # Coolify 4.4.x : l'appel de déploiement est en POST (le GET répond 405).
+          curl -fsS -X POST -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" -H 'Accept: application/json' \
             "${COOLIFY_URL%/}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false"
 
       - name: Attendre que le site réponde
