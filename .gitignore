@@ -48,3 +48,6 @@ next-env.d.ts
 .claude/worktrees/
 .claude/settings.local.json
 .claude/settings.json
+
+# SQL de production généré (scripts/build-production-sql.mjs)
+deploy/coachsen-production.sql
