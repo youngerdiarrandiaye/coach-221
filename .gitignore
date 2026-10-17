@@ -8,6 +8,8 @@
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
 
 # next.js
 /.next/
@@ -34,3 +36,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Outils locaux et application Angular
+/.tools/
+/frontend/node_modules/
+/frontend/.angular/
+/frontend/dist/
+/.next-build/
+
+# Copies de travail des agents et réglages personnels
+.claude/worktrees/
+.claude/settings.local.json
+.claude/settings.json

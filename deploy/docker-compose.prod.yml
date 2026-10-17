@@ -1,0 +1,50 @@
+# CoachSen en production sur Coolify : les images sont construites par GitHub Actions (.github/workflows/deploy.yml)
+# et publiées sur GHCR. Le VPS ne compile rien : il tire les images, ce qui épargne la mémoire de l'app de stock.
+# Dans Coolify : ressource « Docker Compose » pointant sur ce fichier. Variables : voir docs/DEPLOIEMENT_COOLIFY.md.
+name: coachsen
+services:
+  api:
+    image: ghcr.io/${GHCR_OWNER}/coachsen-api:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      CRON_SECRET: ${CRON_SECRET}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
+      WHATSAPP_API_TOKEN: ${WHATSAPP_API_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_API_VERSION: ${WHATSAPP_API_VERSION:-}
+      WHATSAPP_REMINDER_TEMPLATE: ${WHATSAPP_REMINDER_TEMPLATE:-}
+      WHATSAPP_TEMPLATE_LANGUAGE: ${WHATSAPP_TEMPLATE_LANGUAGE:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # RATE_LIMIT_DISABLED ne doit JAMAIS être défini ici.
+    networks: [coachsen]
+    mem_limit: 768m
+    cpus: 1.0
+
+  web:
+    image: ghcr.io/${GHCR_OWNER}/coachsen-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on: [api]
+    expose: ["80"]          # domaine HTTPS configuré sur ce service dans Coolify (port 80)
+    networks: [coachsen]
+    mem_limit: 128m
+
+  scheduler:
+    image: ghcr.io/${GHCR_OWNER}/coachsen-scheduler:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      CRON_SECRET: ${CRON_SECRET}
+      API_URL: http://api:3000
+    networks: [coachsen]
+    mem_limit: 32m
+
+networks:
+  coachsen:
+    name: coachsen_net      # réseau dédié : aucun conteneur de l'app de stock n'y est rattaché

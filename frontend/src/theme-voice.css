@@ -1,0 +1,29 @@
+/* Styles de la saisie vocale (agent « voix »). Chargé après theme.css : utiliser le préfixe :root:root. */
+:root:root app-navigation-tools .tools .voice-btn{margin-left:0;display:inline-grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border-radius:50%;color:var(--accent);font-size:16px}
+:root:root app-navigation-tools .tools .voice-btn+button{margin-left:0}
+:root:root app-navigation-tools .tools .voice-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+:root:root .voice-backdrop{align-items:end;overflow:auto}
+:root:root .voice-sheet{width:100%;max-width:520px;max-height:calc(100dvh - 24px);overflow:auto;padding:20px;border-radius:26px}
+:root:root .voice-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+:root:root .voice-head h2{display:flex;align-items:center;gap:10px;margin:0;font-size:20px}
+:root:root .voice-head h2 i{color:var(--accent)}
+:root:root .voice-close{min-width:44px;min-height:44px}
+:root:root .voice-status{display:flex;align-items:center;gap:10px;min-height:24px;margin:0 0 10px;color:var(--soft);font-size:14px}
+:root:root .voice-dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--accent);animation:voice-pulse 1.2s ease-in-out infinite}
+:root:root .voice-sheet textarea{width:100%;min-height:84px;margin:0 0 4px;font-size:16px;resize:vertical}
+:root:root .voice-problem{margin:8px 0 0;color:var(--text);font-size:14px;font-weight:600}
+:root:root .voice-actions{margin-top:14px}
+:root:root .voice-actions button{min-height:48px}
+:root:root .voice-card h3{margin:4px 0 12px;font-size:18px}
+:root:root .voice-fields{display:grid;gap:8px;margin:0 0 12px}
+:root:root .voice-fields>div{display:flex;justify-content:space-between;gap:16px;padding:10px 14px;border:1px solid var(--edge);border-radius:14px;background:var(--surface-2)}
+:root:root .voice-fields dt{margin:0;color:var(--soft);font-size:13px}
+:root:root .voice-fields dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}
+:root:root .voice-label{margin:8px 0 6px;font-size:13px;font-weight:700}
+:root:root .voice-missing{display:flex;gap:8px;align-items:flex-start;margin:10px 0 0;font-size:14px;font-weight:600;color:var(--accent)}
+:root:root .voice-hint{margin:8px 0 0;color:var(--soft);font-size:12px}
+:root:root .voice-privacy{margin:16px 0 0;color:var(--soft);font-size:12px;line-height:1.5}
+:root:root .voice-privacy i{margin-right:6px;color:var(--accent)}
+@keyframes voice-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+@media(min-width:601px){:root:root .voice-backdrop{align-items:center}}
+@media(prefers-reduced-motion:reduce){:root:root .voice-dot{animation:none}}

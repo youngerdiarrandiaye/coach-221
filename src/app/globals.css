@@ -1,27 +1,540 @@
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ════════════════════════════════════════════════
+   DESIGN SYSTEM — TerangaCoach × BouFit Premium
+   RÈGLES IMMUABLES — NE PAS MODIFIER
+   ════════════════════════════════════════════════ */
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    /* ── Palette sombre BouFit ── */
+    --background:              oklch(0.038 0.010 270);   /* #07070F */
+    --foreground:              oklch(0.980 0.003 280);   /* blanc pur */
+    --card:                    oklch(0.072 0.018 272);   /* #0F0F1E */
+    --card-foreground:         oklch(0.980 0.003 280);
+    --popover:                 oklch(0.085 0.020 272);
+    --popover-foreground:      oklch(0.980 0.003 280);
+    --primary:                 oklch(0.820 0.240 152);   /* #00FF85 neon vert */
+    --primary-foreground:      oklch(0.055 0.012 152);
+    --secondary:               oklch(0.115 0.022 272);
+    --secondary-foreground:    oklch(0.980 0.003 280);
+    --muted:                   oklch(0.115 0.020 272);
+    --muted-foreground:        oklch(0.580 0.018 272);   /* #8888B0 */
+    --accent:                  oklch(0.115 0.020 272);
+    --accent-foreground:       oklch(0.980 0.003 280);
+    --destructive:             oklch(0.560 0.240 20);    /* #FF3B5C rouge vif */
+    --destructive-foreground:  oklch(1 0 0);
+    --border:                  oklch(0.145 0.025 268);   /* #1C1C38 */
+    --input:                   oklch(0.145 0.025 268);
+    --ring:                    oklch(0.820 0.240 152);
+    --radius:                  2rem;   /* ← 32px système de rayon */
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+    --chart-1: oklch(0.820 0.240 152);
+    --chart-2: oklch(0.580 0.018 272);
+    --chart-3: oklch(0.560 0.240 20);
+    --chart-4: oklch(0.540 0.160 240);
+    --chart-5: oklch(0.145 0.025 268);
+
+    --sidebar:                    oklch(0.030 0.008 270);
+    --sidebar-foreground:         oklch(0.980 0.003 280);
+    --sidebar-primary:            oklch(0.820 0.240 152);
+    --sidebar-primary-foreground: oklch(0.055 0.012 152);
+    --sidebar-accent:             oklch(0.115 0.020 272);
+    --sidebar-accent-foreground:  oklch(0.980 0.003 280);
+    --sidebar-border:             oklch(0.145 0.025 268);
+    --sidebar-ring:               oklch(0.820 0.240 152);
+
+    /* ── Alertes sémantiques ── */
+    --success:  #00FF85;
+    --warning:  #FFD600;
+    --danger:   #FF3B5C;
+    --info:     #00CFFF;
+  }
+
+  * { @apply border-border outline-ring/50; }
+
+  html {
+    @apply font-sans;
+    color-scheme: dark;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+    /* Halos atmosphériques */
+    background-image:
+      radial-gradient(ellipse 85% 50% at 50% -8%,  rgba(0,255,133,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 65% 40% at 90% 110%, rgba(100,60,240,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 35% at 5%  105%, rgba(0,180,255,0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* ── Bandes drapeau sénégalais (filigrane) ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      rgba(0, 133, 63,  0.028) 0%      33.33%,
+      rgba(255, 209, 0, 0.028) 33.33%  66.66%,
+      rgba(227,  27, 35, 0.028) 66.66% 100%
+    );
+  }
+
+  /* ── Texture de bruit CSS (feTurbulence) ── */
+  .noise-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 300px 300px;
+  }
+
+  ::-webkit-scrollbar        { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track  { background: #07070F; }
+  ::-webkit-scrollbar-thumb  { background: #1C1C38; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #2C2C58; }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .text-balance { text-wrap: balance; }
+
+  /* ══════════════════════════════════════
+     CARTES — glass premium BouFit
+     ══════════════════════════════════════ */
+  .tc-card {
+    background: linear-gradient(145deg, rgba(20,20,50,0.96) 0%, rgba(13,13,28,0.98) 100%);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 1.5rem;   /* 24px */
+    box-shadow:
+      0 4px 24px rgba(0,0,0,0.60),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: border-color 0.3s cubic-bezier(0.25,0.46,0.45,0.94),
+                box-shadow   0.3s cubic-bezier(0.25,0.46,0.45,0.94),
+                transform    0.3s cubic-bezier(0.25,0.46,0.45,0.94);
   }
+  .tc-card:hover {
+    border-color: rgba(0,255,133,0.22);
+    box-shadow:
+      0 8px 40px rgba(0,0,0,0.70),
+      0 0 0 1px rgba(0,255,133,0.10),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    transform: translateY(-1px);
+  }
+
+  /* Carte avec bordure verte active (style BouFit "C'est pour toi si") */
+  .tc-card-glow {
+    background: linear-gradient(145deg, rgba(20,20,50,0.96) 0%, rgba(13,13,28,0.98) 100%);
+    border: 1.5px solid rgba(0,255,133,0.45);
+    border-radius: 1.5rem;
+    box-shadow:
+      0 0 0 1px rgba(0,255,133,0.12),
+      0 0 40px rgba(0,255,133,0.14),
+      0 8px 32px rgba(0,0,0,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.06);
+  }
+
+  /* Carte danger (style "Ce n'est pas pour toi si") */
+  .tc-card-danger {
+    background: linear-gradient(145deg, rgba(40,10,20,0.96) 0%, rgba(25,8,16,0.98) 100%);
+    border: 1.5px solid rgba(255,59,92,0.35);
+    border-radius: 1.5rem;
+    box-shadow:
+      0 0 32px rgba(255,59,92,0.10),
+      0 8px 32px rgba(0,0,0,0.65);
+  }
+
+  /* ── Texte dégradé ── */
+  .tc-gradient-text {
+    background: linear-gradient(135deg, #00FF85 0%, #00CFFF 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ══════════════════════════════════════
+     BOUTONS — feeling magnétique
+     ══════════════════════════════════════ */
+  .tc-btn-primary {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #00FF85 0%, #00D166 100%);
+    color: #060610;
+    font-weight: 700;
+    border-radius: 2rem;
+    box-shadow: 0 0 28px rgba(0,255,133,0.32), 0 2px 12px rgba(0,0,0,0.50);
+    transition: transform 0.3s cubic-bezier(0.25,0.46,0.45,0.94),
+                box-shadow 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .tc-btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.20) 0%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .tc-btn-primary:hover {
+    transform: scale(1.03) translateY(-1px);
+    box-shadow: 0 0 44px rgba(0,255,133,0.50), 0 4px 20px rgba(0,0,0,0.60);
+  }
+  .tc-btn-primary:hover::after { opacity: 1; }
+  .tc-btn-primary:active { transform: scale(0.98) translateY(0); }
+
+  /* Bouton secondaire/outline */
+  .tc-btn-outline {
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: 1px solid rgba(0,255,133,0.35);
+    color: #00FF85;
+    font-weight: 600;
+    border-radius: 2rem;
+    transition: transform    0.3s cubic-bezier(0.25,0.46,0.45,0.94),
+                border-color 0.3s cubic-bezier(0.25,0.46,0.45,0.94),
+                box-shadow   0.3s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .tc-btn-outline:hover {
+    transform: scale(1.03) translateY(-1px);
+    border-color: rgba(0,255,133,0.70);
+    box-shadow: 0 0 20px rgba(0,255,133,0.18);
+  }
+
+  /* ── Liens interactifs lift ── */
+  .tc-link {
+    transition: transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94),
+                color     0.25s ease;
+    display: inline-block;
+  }
+  .tc-link:hover { transform: translateY(-1px); }
+
+  /* ══════════════════════════════════════
+     ALERTES INLINE
+     ══════════════════════════════════════ */
+  .tc-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border: 1px solid;
+  }
+  .tc-alert-success {
+    background: rgba(0,255,133,0.08);
+    border-color: rgba(0,255,133,0.28);
+    color: #00FF85;
+  }
+  .tc-alert-warning {
+    background: rgba(255,214,0,0.08);
+    border-color: rgba(255,214,0,0.28);
+    color: #FFD600;
+  }
+  .tc-alert-danger {
+    background: rgba(255,59,92,0.08);
+    border-color: rgba(255,59,92,0.28);
+    color: #FF3B5C;
+  }
+  .tc-alert-info {
+    background: rgba(0,207,255,0.08);
+    border-color: rgba(0,207,255,0.28);
+    color: #00CFFF;
+  }
+
+  /* ── Safe area iOS ── */
+  .pb-safe {
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  /* ══ Animation utilities — "En séance" ══ */
+  .animate-hero-glow    { animation: hero-glow-pulse 3.5s ease-in-out infinite; }
+  .animate-float        { animation: float-y       7s  ease-in-out infinite; }
+  .animate-float-slow   { animation: float-y-slow  11s ease-in-out infinite; }
+  .animate-glow-breathe { animation: glow-breathe  3s  ease-in-out infinite; }
+  .animate-live-red     { animation: live-dot-red  1.5s ease-in-out infinite; }
+  .animate-page-enter   { animation: page-enter 0.65s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+
+  /* Shimmer au survol sur toutes les tc-card */
+  .tc-card {
+    --shimmer-x: -200%;
+  }
+  .tc-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      rgba(255,255,255,0.045) 50%,
+      transparent 65%
+    );
+    background-size: 200% 100%;
+    background-position: var(--shimmer-x) center;
+    pointer-events: none;
+    transition: background-position 0.65s ease;
+    z-index: 1;
+  }
+  .tc-card:hover::before {
+    background-position: 200% center;
+  }
+  .tc-card { position: relative; }
+
+  /* Ripple sur boutons */
+  .tc-btn-ripple {
+    position: relative;
+    overflow: hidden;
+  }
+  .tc-btn-ripple-dot {
+    position: absolute;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    background: rgba(255,255,255,0.20);
+    pointer-events: none;
+    animation: ripple-expand 0.55s ease-out forwards;
+    transform-origin: 0 0;
+  }
+
+  /* ══════════════════════════════════════
+     EFFETS LUMINEUX — izimentor style
+     ══════════════════════════════════════ */
+
+  /* Lueurs par couleur */
+  .glow-green {
+    text-shadow:
+      0 0 12px rgba(0,255,133,0.90),
+      0 0 28px rgba(0,255,133,0.55),
+      0 0 56px rgba(0,255,133,0.25);
+  }
+  .glow-cyan {
+    text-shadow:
+      0 0 12px rgba(0,207,255,0.90),
+      0 0 28px rgba(0,207,255,0.55),
+      0 0 56px rgba(0,207,255,0.25);
+  }
+  .glow-gold {
+    text-shadow:
+      0 0 12px rgba(255,214,0,0.90),
+      0 0 28px rgba(255,214,0,0.55),
+      0 0 56px rgba(255,214,0,0.25);
+  }
+  .glow-red {
+    text-shadow:
+      0 0 12px rgba(255,59,92,0.90),
+      0 0 28px rgba(255,59,92,0.55),
+      0 0 56px rgba(255,59,92,0.25);
+  }
+  .glow-purple {
+    text-shadow:
+      0 0 12px rgba(123,111,255,0.90),
+      0 0 28px rgba(123,111,255,0.55),
+      0 0 56px rgba(123,111,255,0.25);
+  }
+  .glow-white {
+    text-shadow:
+      0 0 16px rgba(255,255,255,0.30),
+      0 0 36px rgba(255,255,255,0.12);
+  }
+
+  /* Lueur douce sur h1/h2 principaux */
+  h1.font-black,
+  h2.font-black {
+    text-shadow: 0 2px 24px rgba(255,255,255,0.09);
+  }
+
+  /* Lueur auto sur les valeurs numériques colorées (stat values, countdown) */
+  .tabular-nums[style*="color: #00FF85"],
+  .tabular-nums[style*="color:#00FF85"] {
+    text-shadow:
+      0 0 14px rgba(0,255,133,0.85),
+      0 0 30px rgba(0,255,133,0.45);
+  }
+  .tabular-nums[style*="color: #FF3B5C"],
+  .tabular-nums[style*="color:#FF3B5C"] {
+    text-shadow:
+      0 0 14px rgba(255,59,92,0.85),
+      0 0 30px rgba(255,59,92,0.45);
+  }
+  .tabular-nums[style*="color: #00CFFF"],
+  .tabular-nums[style*="color:#00CFFF"] {
+    text-shadow:
+      0 0 14px rgba(0,207,255,0.85),
+      0 0 30px rgba(0,207,255,0.45);
+  }
+  .tabular-nums[style*="color: #FFD600"],
+  .tabular-nums[style*="color:#FFD600"] {
+    text-shadow:
+      0 0 14px rgba(255,214,0,0.85),
+      0 0 30px rgba(255,214,0,0.45);
+  }
+}
+
+/* ══════════════════════════════════════
+   KEYFRAMES GLOBAUX — NE PAS TOUCHER
+   ══════════════════════════════════════ */
+@keyframes pulse-ring-green {
+  0%   { box-shadow: 0 0 0 0   rgba(0,255,133,0.50); }
+  70%  { box-shadow: 0 0 0 10px rgba(0,255,133,0); }
+  100% { box-shadow: 0 0 0 0   rgba(0,255,133,0); }
+}
+@keyframes pulse-ring-red {
+  0%   { box-shadow: 0 0 0 0   rgba(255,59,92,0.50); }
+  70%  { box-shadow: 0 0 0 10px rgba(255,59,92,0); }
+  100% { box-shadow: 0 0 0 0   rgba(255,59,92,0); }
+}
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.75); }
+}
+@keyframes slide-up-fade {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes glow-border-shift {
+  0%, 100% { border-color: rgba(0,255,133,0.30); }
+  50%       { border-color: rgba(0,255,133,0.65); }
+}
+@keyframes shimmer-move {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ══ "En séance" — l'app qui respire ══════════════
+   Heartbeat du tableau de bord
+   ═════════════════════════════════════════════════ */
+
+/* Battement du halo hero (box-shadow uniquement — border reste inline) */
+@keyframes hero-glow-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 70px rgba(0,255,133,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+  }
+  50% {
+    box-shadow:
+      0 0 120px rgba(0,255,133,0.22),
+      0 0 48px  rgba(0,255,133,0.14),
+      inset 0 1px 0 rgba(255,255,255,0.07);
+  }
+}
+
+/* Halos décoratifs qui flottent */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-16px); }
+}
+@keyframes float-y-slow {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  33%       { transform: translateY(-10px) translateX(8px); }
+  66%       { transform: translateY(-18px) translateX(-4px); }
+}
+
+/* Glow du nom du coach qui respire */
+@keyframes glow-breathe {
+  0%, 100% {
+    text-shadow:
+      0 0 12px rgba(0,255,133,0.90),
+      0 0 28px rgba(0,255,133,0.55),
+      0 0 56px rgba(0,255,133,0.25);
+  }
+  50% {
+    text-shadow:
+      0 0 22px rgba(0,255,133,1.0),
+      0 0 52px rgba(0,255,133,0.80),
+      0 0 96px rgba(0,255,133,0.50);
+  }
+}
+
+/* Pulsation d'un point "live" rouge */
+@keyframes live-dot-red {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 0 0   rgba(255,59,92,0.70); transform: scale(1); }
+  50%       { opacity: 0.7; box-shadow: 0 0 0 5px rgba(255,59,92,0);   transform: scale(0.85); }
+}
+
+/* Entrée des pages (slide-up global) */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* Ripple au clic sur boutons */
+@keyframes ripple-expand {
+  0%   { transform: scale(0) translate(-50%, -50%); opacity: 0.45; }
+  100% { transform: scale(6) translate(-50%, -50%); opacity: 0; }
+}
+
+@keyframes wiggle {
+  0%,100% { transform: rotate(0deg); }
+  15%     { transform: rotate(-14deg); }
+  30%     { transform: rotate(10deg); }
+  45%     { transform: rotate(-8deg); }
+  60%     { transform: rotate(6deg); }
+  75%     { transform: rotate(-4deg); }
+  90%     { transform: rotate(2deg); }
+}
+
+/* ── Heartbeat animations ─────────────────────────────────────────── */
+
+/* Battement lent (FC Repos ~60 bpm) : double pulsation "lub-dub" */
+@keyframes heartbeat-slow {
+  0%, 100% { transform: scale(1); }
+  10%      { transform: scale(1.26); }
+  20%      { transform: scale(1.06); }
+  30%      { transform: scale(1.18); }
+  42%      { transform: scale(1); }
+}
+
+/* Battement rapide (FC Effort ~150 bpm) */
+@keyframes heartbeat-fast {
+  0%, 100% { transform: scale(1); }
+  8%       { transform: scale(1.42); }
+  16%      { transform: scale(1.05); }
+  24%      { transform: scale(1.30); }
+  34%      { transform: scale(1); }
+}
+
+/* Halo rouge qui pulse avec le cœur */
+@keyframes heartglow-slow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,59,92,0.30)); }
+  10%      { filter: drop-shadow(0 0 14px rgba(255,59,92,0.85)); }
+  30%      { filter: drop-shadow(0 0 8px rgba(255,59,92,0.55)); }
+  42%      { filter: drop-shadow(0 0 2px rgba(255,59,92,0.30)); }
+}
+
+@keyframes heartglow-fast {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255,30,55,0.30)); }
+  8%       { filter: drop-shadow(0 0 20px rgba(255,30,55,1.00)); }
+  24%      { filter: drop-shadow(0 0 10px rgba(255,30,55,0.65)); }
+  34%      { filter: drop-shadow(0 0 2px rgba(255,30,55,0.30)); }
+}
+
+/* Ligne ECG qui se dessine en boucle */
+@keyframes ecg-sweep {
+  0%   { stroke-dashoffset: 400; opacity: 0; }
+  6%   { opacity: 1; }
+  85%  { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+/* Fond rouge qui pulse derrière le cœur effort */
+@keyframes effort-ring {
+  0%,100% { transform: scale(1); opacity: 0; }
+  8%      { transform: scale(1.6); opacity: 0.35; }
+  30%     { transform: scale(1.3); opacity: 0.15; }
+  34%     { transform: scale(1.0); opacity: 0; }
 }

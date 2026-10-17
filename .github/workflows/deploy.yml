@@ -1,0 +1,119 @@
+name: Déploiement
+
+# Chaque envoi sur main : contrôles (ci.yml), construction des 3 images, publication sur GHCR, puis ordre de
+# déploiement à Coolify (docker compose sur le VPS), et contrôle que le site répond.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un seul déploiement à la fois ; un déploiement en cours n'est jamais interrompu.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    uses: ./.github/workflows/ci.yml
+
+  images:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: api
+            dockerfile: deploy/api.Dockerfile
+          - name: web
+            dockerfile: deploy/web.Dockerfile
+          - name: scheduler
+            dockerfile: deploy/scheduler.Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Étiquettes de l'image (identifiant du commit et latest)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/coachsen-${{ matrix.name }}
+          tags: |
+            type=sha,format=short,prefix=
+            type=raw,value=latest
+      - name: Construire et publier
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
+          # Variables publiques de l'API, lues à la construction : clé anon seulement, jamais la clé de service.
+          build-args: |
+            NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+
+  deploy:
+    needs: images
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Environnement GitHub « production » : on peut y exiger une validation manuelle avant chaque déploiement.
+    environment:
+      name: production
+      url: ${{ vars.NEXT_PUBLIC_APP_URL }}
+    env:
+      COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+      COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
+      COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+      SITE_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+    steps:
+      - name: Contrôler la configuration
+        run: |
+          for v in COOLIFY_URL COOLIFY_APP_UUID COOLIFY_API_TOKEN SITE_URL; do
+            [ -n "${!v}" ] || { echo "::error::$v manquant (secrets ou variables du dépôt)"; exit 1; }
+          done
+
+      - name: Fixer la version à déployer (IMAGE_TAG = commit)
+        run: |
+          tag="${GITHUB_SHA::7}"
+          body="{\"key\":\"IMAGE_TAG\",\"value\":\"${tag}\",\"is_preview\":false}"
+          api="${COOLIFY_URL%/}/api/v1/applications/${COOLIFY_APP_UUID}/envs"
+          code=$(curl -sS -o /tmp/r.json -w '%{http_code}' -X PATCH "$api" -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" -H 'Content-Type: application/json' -d "$body")
+          if [ "$code" -ge 300 ]; then
+            code=$(curl -sS -o /tmp/r.json -w '%{http_code}' -X POST "$api" -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" -H 'Content-Type: application/json' -d "$body")
+          fi
+          [ "$code" -lt 300 ] || { echo "::error::Coolify a refusé IMAGE_TAG (HTTP $code)"; cat /tmp/r.json; exit 1; }
+          echo "Version : ${tag}"
+
+      - name: Déclencher le déploiement dans Coolify
+        run: |
+          curl -fsS -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" \
+            "${COOLIFY_URL%/}/api/v1/deploy?uuid=${COOLIFY_APP_UUID}&force=false"
+
+      - name: Attendre que le site réponde
+        run: |
+          # /api/v1/auth/session répond 200 sans connexion : il traverse Nginx, l'API et Supabase.
+          for i in $(seq 1 30); do
+            api=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${SITE_URL%/}/api/v1/auth/session" || true)
+            home=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "${SITE_URL%/}/" || true)
+            echo "essai $i : site=$home api=$api"
+            if [ "$home" = "200" ] && [ "$api" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::error::Le site ne répond pas correctement après 5 minutes : voir les journaux Coolify, puis revenir à la version précédente (docs/DEPLOIEMENT_COOLIFY.md, section 4)."
+          exit 1

@@ -1,0 +1,79 @@
+/* Thème « Corail » : clair, blanc, dégradé rose-orange (inspiré des maquettes de gestion de clients). Actif seulement avec <html data-theme="corail">. */
+:root:root[data-theme=corail]{--bg:#fbf6f8;--surface:#ffffff;--surface-2:#f7eef2;--surface-3:#f0e3ea;--edge:#eadde4;--text:#1d1620;--soft:#7d6f78;--accent:#ff1f6b;--on-accent:#ffffff;--forest:#ff1f6b;--primary:#ff1f6b;--lime:#ff1f6b;--ink:#1d1620;--muted:#7d6f78;--paper:#fbf6f8;--line:#eadde4;--grad:linear-gradient(160deg,#ff1f6b 0%,#ff6a4d 60%,#ff9f43 100%);--glow:radial-gradient(120% 90% at 100% 0%,#ff1f6b14 0%,#ff1f6b00 55%);color-scheme:light}
+:root:root[data-theme=corail] body{background:var(--bg);color:var(--text)}
+:root:root[data-theme=corail] a{color:#e11d5a}
+:root:root[data-theme=corail] .sidebar{background:#fff;color:var(--soft);border-right:1px solid var(--edge)}
+:root:root[data-theme=corail] .sidebar .brand,:root:root[data-theme=corail] .mobile-brand,:root:root[data-theme=corail] .auth-story .brand{color:var(--text)}
+:root:root[data-theme=corail] .sidebar nav a{color:#5d5059}
+:root:root[data-theme=corail] .sidebar nav a:hover{background:var(--surface-2);color:var(--text)}
+:root:root[data-theme=corail] .sidebar nav a.active{background:var(--grad);color:#fff}
+:root:root[data-theme=corail] .sidebar-note{background:var(--grad);border:0;color:#fff}
+:root:root[data-theme=corail] .sidebar-note p,:root:root[data-theme=corail] .sidebar-note strong,:root:root[data-theme=corail] .sidebar-note .eyebrow,:root:root[data-theme=corail] .sidebar-note a{color:#fff}
+:root:root[data-theme=corail] .note-star{color:#ffffff30}
+:root:root[data-theme=corail] .sidebar-location,:root:root[data-theme=corail] .sidebar-label{color:var(--soft)}
+:root:root[data-theme=corail] .topbar{background:#ffffffd9;border-bottom:1px solid var(--edge);backdrop-filter:blur(10px)}
+:root:root[data-theme=corail] footer{color:var(--soft)}
+:root:root[data-theme=corail] .primary,:root:root[data-theme=corail] .button.primary{background:var(--grad);color:#fff;border-color:transparent}
+:root:root[data-theme=corail] .primary:hover{background:var(--grad);filter:brightness(1.05);box-shadow:0 8px 22px #ff1f6b40}
+:root:root[data-theme=corail] .secondary{background:#fff;border-color:var(--edge);color:var(--text)}
+:root:root[data-theme=corail] .secondary:hover{background:var(--surface-2)}
+:root:root[data-theme=corail] input,:root:root[data-theme=corail] select,:root:root[data-theme=corail] textarea{background:#fff;border-color:#e3d6dd;color:var(--text)}
+:root:root[data-theme=corail] input:focus,:root:root[data-theme=corail] select:focus,:root:root[data-theme=corail] textarea:focus{border-color:#ff1f6b;box-shadow:0 0 0 3px #ff1f6b22}
+:root:root[data-theme=corail] input::placeholder,:root:root[data-theme=corail] textarea::placeholder{color:#a79aa3}
+:root:root[data-theme=corail] select option{background:#fff;color:var(--text)}
+:root:root[data-theme=corail] .panel,:root:root[data-theme=corail] .metric,:root:root[data-theme=corail] .item-card,:root:root[data-theme=corail] .quick-tile,:root:root[data-theme=corail] .modal,:root:root[data-theme=corail] .today-card,:root:root[data-theme=corail] .due-card,:root:root[data-theme=corail] .wave-balance{background:#fff;border:1px solid var(--edge);box-shadow:0 6px 22px #4a1d3012;color:var(--text)}
+:root:root[data-theme=corail] .wave-balance{background:var(--grad);border:0;color:#fff;box-shadow:0 12px 30px #ff1f6b38}
+:root:root[data-theme=corail] .wave-balance .bal-label,:root:root[data-theme=corail] .wave-balance .bal-foot,:root:root[data-theme=corail] .wave-balance .bal-amount,:root:root[data-theme=corail] .wave-balance .bal-foot strong{color:#fff}
+:root:root[data-theme=corail] .metric.featured{background:var(--grad);border:0;color:#fff}
+:root:root[data-theme=corail] .metric.featured .metric-top,:root:root[data-theme=corail] .metric.featured>strong,:root:root[data-theme=corail] .metric.featured .metric-foot{color:#fff}
+:root:root[data-theme=corail] .metric.featured .metric-icon{background:#ffffff33;color:#fff}
+:root:root[data-theme=corail] .metric-icon{background:#fff0f4;color:#e11d5a}
+:root:root[data-theme=corail] .item-avatar,:root:root[data-theme=corail] .session-symbol,:root:root[data-theme=corail] .payment-avatar,:root:root[data-theme=corail] .quick-tile .qi{background:#ffe3ec;color:#d3124f}
+:root:root[data-theme=corail] .item-avatar[data-hue]{background:hsl(var(--hue) 80% 90%);color:hsl(var(--hue) 70% 32%)}
+:root:root[data-theme=corail] .item-avatar[data-tone=warn]{background:#ffedd2;color:#a15a00}
+:root:root[data-theme=corail] .item-avatar[data-tone=bad]{background:#fde0e4;color:#b01535}
+:root:root[data-theme=corail] .item-card:hover,:root:root[data-theme=corail] .quick-tile:hover{border-color:#ff9db9;box-shadow:0 12px 30px #ff1f6b22}
+:root:root[data-theme=corail] .quick-tile:hover .qi{background:var(--grad);color:#fff}
+:root:root[data-theme=corail] .item-arrow,:root:root[data-theme=corail] .chips li{background:#f7eef2;color:var(--text)}
+:root:root[data-theme=corail] .pill{background:#f4eaef;color:#5d5059}
+:root:root[data-theme=corail] .pill[data-tone=ok]{background:#dcf5e4;color:#17703a}
+:root:root[data-theme=corail] .pill[data-tone=warn]{background:#ffedd2;color:#a15a00}
+:root:root[data-theme=corail] .pill[data-tone=bad]{background:#fde0e4;color:#b01535}
+:root:root[data-theme=corail] .feed-avatar{background:#ffe3ec;color:#d3124f}
+:root:root[data-theme=corail] .feed-copy small,:root:root[data-theme=corail] .feed-state,:root:root[data-theme=corail] .feed-amount.pending,:root:root[data-theme=corail] .picker-label,:root:root[data-theme=corail] .sidebar-location{color:var(--soft)}
+:root:root[data-theme=corail] .feed-amount.in{color:#12803f}
+:root:root[data-theme=corail] .fab,:root:root[data-theme=corail] .bottom-nav .bn-add{background:var(--grad);color:#fff;box-shadow:0 10px 26px #ff1f6b55}
+:root:root[data-theme=corail] .bottom-nav .bn-add{box-shadow:0 8px 22px #ff1f6b55,0 0 0 6px #fff}
+:root:root[data-theme=corail] .bottom-nav{background:#ffffffee;border-top:1px solid var(--edge)}
+:root:root[data-theme=corail] .bottom-nav a.active,:root:root[data-theme=corail] .bottom-nav button.active{color:#e11d5a}
+:root:root[data-theme=corail] .bottom-nav a.active i{filter:none}
+:root:root[data-theme=corail] .next-bar{background:var(--grad);color:#fff}
+:root:root[data-theme=corail] .today-link,:root:root[data-theme=corail] .due-head a,:root:root[data-theme=corail] .today-more,:root:root[data-theme=corail] .section-caption a,:root:root[data-theme=corail] .panel-heading>a{color:#e11d5a}
+:root:root[data-theme=corail] .auto-note{background:#fff0f4;color:#c01650}
+:root:root[data-theme=corail] .due-btn i{color:#25a244}
+:root:root[data-theme=corail] .ag-card{background:#fff;border-color:var(--edge);color:var(--text)}
+:root:root[data-theme=corail] .ag-card:hover{background:#fff7fa;border-color:#ff9db9}
+:root:root[data-theme=corail] .ag-card[data-status=EFFECTUEE]{background:#effaf2}
+:root:root[data-theme=corail] .ag-tg-event{background:#fff0f4;color:var(--text);border-color:#ff1f6b}
+:root:root[data-theme=corail] .ag-tg-event[style*="--hue"][data-status=PLANIFIEE],:root:root[data-theme=corail] .ag-mchip[style*="--hue"][data-status=PLANIFIEE]{background:hsl(var(--hue) 85% 92%);border-color:hsl(var(--hue) 70% 50%)}
+:root:root[data-theme=corail] .ag-tg-event[data-status=EFFECTUEE],:root:root[data-theme=corail] .ag-mchip[data-status=EFFECTUEE]{background:#17a34a;border-color:#17a34a;color:#fff}
+:root:root[data-theme=corail] .ag-tg-event[data-status=EFFECTUEE] .ag-ev-line,:root:root[data-theme=corail] .ag-tg-event[data-status=EFFECTUEE] .ag-ev-client{color:#fff}
+:root:root[data-theme=corail] .ag-tg-event[data-status=ANNULEE]{background:#f3eef1;border-color:#d8ccd2;color:var(--soft)}
+:root:root[data-theme=corail] .ag-card[style*="--hue"]{border-left-color:hsl(var(--hue) 75% 50%)}
+:root:root[data-theme=corail] .ag-tg-col.is-today{background:#ff1f6b0a}
+:root:root[data-theme=corail] .ag-tg-slot:hover,:root:root[data-theme=corail] .ag-mcell-hit:hover{background:#ff1f6b10}
+:root:root[data-theme=corail] .ag-tg-event.is-selected,:root:root[data-theme=corail] .ag-mchip.is-selected{box-shadow:0 0 0 2px #1b1620}
+:root:root[data-theme=corail] .ag-today-tag{background:#ff1f6b;color:#fff}
+:root:root[data-theme=corail] .coach-hero{background:var(--grad)}
+:root:root[data-theme=corail] .auth-story{background:var(--grad);color:#fff;border-right:0}
+:root:root[data-theme=corail] .auth-story .brand,:root:root[data-theme=corail] .auth-story h1,:root:root[data-theme=corail] .auth-story em{color:#fff}
+:root:root[data-theme=corail] .auth-card button{background:var(--grad);color:#fff}
+:root:root[data-theme=corail] .status-dot{background:#ff1f6b;box-shadow:0 0 0 4px #ff1f6b22}
+:root:root[data-theme=corail] .kpi{background:#fff;border-color:var(--edge)}
+:root:root[data-theme=corail] app-navigation-tools .tools input{background-color:#fff;border-color:#e3d6dd}
+/* Cohérence : teintes vert sombre de Nuit citron sans équivalent clair (en-tête mobile, badge payé, décor du héros). */
+:root:root[data-theme=corail] app-navigation-tools{background:linear-gradient(180deg,#fff 0%,#fff0f4 100%);border-bottom:0;box-shadow:0 8px 20px #ff1f6b14}
+:root:root[data-theme=corail] .paid{background:#dcf5e4;color:#17703a}
+:root:root[data-theme=corail] .track-art{background:#ffffff22}
+/* Mobile : « Aujourd'hui » n'est pas une carte (comme dans Nuit citron), seul le bloc intérieur l'est. */
+@media(max-width:800px){:root:root[data-theme=corail] .today-card{background:none;border:0;box-shadow:none;padding:0}}

@@ -1,0 +1,15 @@
+node_modules
+frontend/node_modules
+.next
+.next-build
+frontend/dist
+.git
+.tools
+.claude
+test-results
+tests
+docs
+*.log
+.env*
+!.env.example
+tsconfig.tsbuildinfo

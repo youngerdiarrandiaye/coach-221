@@ -1,0 +1,46 @@
+/* Thème « Lagon » : sombre, anthracite et turquoise (inspiré d'applications de musculation). Dérivé de Nuit citron : mêmes composants, teintes vert citron remplacées. Actif seulement avec <html data-theme="lagon">. Fichier généré par recoloration de theme.css puis retouché à la main (bandeaux). */
+:root:root[data-theme=lagon]{--bg:#0c0d0e;--surface:#161819;--surface-2:#1e2123;--surface-3:#272b2d;--edge:#2c3133;--text:#f2f5f6;--soft:#8f9c9f;--accent:#5fc9d2;--on-accent:#062a2e;--forest:#5fc9d2;--primary:#5fc9d2;--lime:#5fc9d2;--ink:#f2f5f6;--muted:#8f9c9f;--paper:#0c0d0e;--line:#2c3133;--grad:linear-gradient(160deg,#3b8a92 0%,#2b6870 100%);--glow:radial-gradient(120% 90% at 100% 0%,#5fc9d226 0%,#5fc9d200 55%);color-scheme:dark}
+:root:root[data-theme=lagon] .primary:hover{background:#86dde4;box-shadow:0 6px 20px #5fc9d233}
+:root:root[data-theme=lagon] input:focus,:root:root[data-theme=lagon] select:focus,:root:root[data-theme=lagon] textarea:focus{box-shadow:0 0 0 3px #5fc9d222}
+:root:root[data-theme=lagon] .note-star{color:#5fc9d218}
+:root:root[data-theme=lagon] .status-dot{box-shadow:0 0 0 4px #5fc9d222}
+:root:root[data-theme=lagon] .item-avatar{background:#12302f}
+:root:root[data-theme=lagon] .pill[data-tone=ok]{background:#12302f}
+:root:root[data-theme=lagon] .paid{background:#12302f}
+:root:root[data-theme=lagon] .hero-button:hover{background:#86dde4}
+:root:root[data-theme=lagon] .track-art{background:linear-gradient(130deg,#0d1b1c,#1f4a4e)}
+:root:root[data-theme=lagon] .session-symbol,:root:root[data-theme=lagon] .payment-avatar{background:#12302f}
+:root:root[data-theme=lagon] .item-avatar,:root:root[data-theme=lagon] .session-symbol,:root:root[data-theme=lagon] .payment-avatar{background:#5fc9d21f}
+:root:root[data-theme=lagon] .item-avatar[data-tone=warn]{background:#5fc9d21f}
+:root:root[data-theme=lagon] .item-card:hover,:root:root[data-theme=lagon] .quick-tile:hover{border-color:#5fc9d266}
+:root:root[data-theme=lagon] .track-art{background:linear-gradient(130deg,#0a1516,#1f4a4e)}
+:root:root[data-theme=lagon] .quick-tile .qi{background:#5fc9d21f}
+:root:root[data-theme=lagon] .fab{box-shadow:0 10px 30px #5fc9d240,0 4px 12px #000000a0}
+:root:root[data-theme=lagon] .fab:hover{box-shadow:0 14px 36px #5fc9d259,0 4px 12px #000000a0}
+@media(max-width:800px){:root:root[data-theme=lagon] .bottom-nav a.active i{filter:drop-shadow(0 0 8px #5fc9d266)}
+:root:root[data-theme=lagon] .bottom-nav .bn-add{box-shadow:0 8px 24px #5fc9d240,0 0 0 6px #0f0f0f}
+}
+:root:root[data-theme=lagon] .auto-note{background:#5fc9d21f}
+:root:root[data-theme=lagon] .ag-tg-col.is-today{background:#5fc9d208}
+:root:root[data-theme=lagon] .ag-tg-slot:hover{background:#5fc9d214}
+:root:root[data-theme=lagon] .ag-mcell-hit:hover{background:#5fc9d212}
+:root:root[data-theme=lagon] .ag-card:hover{border-color:#5fc9d266}
+:root:root[data-theme=lagon] .ag-card[data-status=EFFECTUEE]{background:#5fc9d212}
+@media(max-width:800px){:root:root[data-theme=lagon] .ag-fab{box-shadow:0 10px 28px #5fc9d240,0 4px 12px #000000a0}
+}
+@media(max-width:800px){:root:root[data-theme=lagon] .topbar{background:linear-gradient(180deg,#12302f 0%,#0f2a2c 100%)}
+:root:root[data-theme=lagon] app-navigation-tools{background:#0f2a2c}
+:root:root[data-theme=lagon] app-navigation-tools .tools input{border-color:#1d4a4d}
+}
+
+/* Bandeaux verts-bleus profonds, comme les visuels de la référence. */
+:root:root[data-theme=lagon] .wave-balance,:root:root[data-theme=lagon] .coach-hero,:root:root[data-theme=lagon] .metric.featured{background:var(--grad);border-color:transparent;color:#fff}
+:root:root[data-theme=lagon] .wave-balance .bal-label,:root:root[data-theme=lagon] .wave-balance .bal-foot,:root:root[data-theme=lagon] .wave-balance .bal-amount,:root:root[data-theme=lagon] .wave-balance .bal-foot strong{color:#fff}
+:root:root[data-theme=lagon] .auth-story{background:var(--grad);color:#fff}
+/* Page de connexion : dessin et légendes (couleurs écrites dans le SVG et dans styles.css). */
+:root:root[data-theme=lagon] .auth-art [stroke="#d5f548"]{stroke:var(--accent)}
+:root:root[data-theme=lagon] .auth-art [fill="#d5f548"]{fill:var(--accent)}
+:root:root[data-theme=lagon] .auth-art [stroke="#123c30"]{stroke:#2b6870}
+:root:root[data-theme=lagon] .auth-art-caption{color:var(--accent)}
+:root:root[data-theme=lagon] .auth-card .auth-index{color:var(--soft)}
+:root:root[data-theme=lagon] .auth-index span{background:var(--accent)}

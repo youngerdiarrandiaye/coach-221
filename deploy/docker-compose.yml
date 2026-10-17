@@ -1,0 +1,60 @@
+# CoachSen sur Coolify : trois conteneurs sur leur propre réseau, sans lien avec l'app de stock.
+# Seul « web » est exposé (domaine HTTPS configuré dans Coolify, port 80). « api » et « scheduler » restent internes.
+name: coachsen
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/api.Dockerfile
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
+      CRON_SECRET: ${CRON_SECRET}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_SUBJECT: ${VAPID_SUBJECT}
+      WHATSAPP_API_TOKEN: ${WHATSAPP_API_TOKEN:-}
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID:-}
+      WHATSAPP_API_VERSION: ${WHATSAPP_API_VERSION:-}
+      WHATSAPP_REMINDER_TEMPLATE: ${WHATSAPP_REMINDER_TEMPLATE:-}
+      WHATSAPP_TEMPLATE_LANGUAGE: ${WHATSAPP_TEMPLATE_LANGUAGE:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # RATE_LIMIT_DISABLED ne doit JAMAIS être défini ici.
+    networks: [coachsen]
+    mem_limit: 768m        # plafond : l'app de stock sur le même serveur ne doit pas manquer de mémoire
+    cpus: 1.0
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    restart: unless-stopped
+    depends_on: [api]
+    expose: ["80"]
+    networks: [coachsen]
+    mem_limit: 128m
+
+  scheduler:
+    image: alpine:3.20
+    restart: unless-stopped
+    depends_on: [api]
+    environment:
+      CRON_SECRET: ${CRON_SECRET}
+      API_URL: http://api:3000
+    volumes:
+      - ./scheduler.sh:/scheduler.sh:ro
+    command: ["sh", "/scheduler.sh"]
+    networks: [coachsen]
+    mem_limit: 32m
+
+networks:
+  coachsen:
+    name: coachsen_net     # réseau dédié : aucun conteneur de l'app de stock n'y est rattaché
