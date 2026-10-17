@@ -2,7 +2,8 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    # Sur main, les mêmes contrôles tournent déjà dans deploy.yml (job verify) : on ne les double pas.
+    branches-ignore: [main]
   pull_request:
   workflow_call:   # réutilisé par deploy.yml : rien n'est déployé si ces contrôles échouent
 

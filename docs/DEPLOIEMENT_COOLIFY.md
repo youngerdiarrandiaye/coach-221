@@ -44,6 +44,16 @@ Un Supabase auto-hébergé complet demande environ 2 Go de mémoire libre en plu
 7. **Déployer**, puis la recette de MISE_EN_LIGNE.md §8 (connexion, séance, PDF, rappels, second coach isolé).
 8. **Surveillance et sauvegardes** : sauvegarde quotidienne programmée de la base CoachSen (Coolify) ; contrôle externe sur `/api/cron/health` avec le jeton.
 
+## 3 ter. Ressources déjà créées dans Coolify (17 octobre 2026)
+
+| Ressource | Identifiant | État |
+|---|---|---|
+| Projet `coach+221` | `1qnh7kpmb0pohptyckxmhyu4` (environnement `production` : `5rzrv6qqh3crtggim73xcjq8`) | créé |
+| Supabase dédié (service) | `wtuf0olk1dviv1dijqp6sl5w`, domaine `https://supa-coachsen.109.123.253.92.sslip.io` (port 8000) | créé, à l'arrêt, mots de passe à régénérer avant le premier démarrage |
+| Application CoachSen (service Docker Compose) | `wi3qbbl3sjobypkbadhujdfe`, domaine `https://coachsen.109.123.253.92.sslip.io` (port 80) | créée, à l'arrêt, variables d'environnement à renseigner |
+
+`COOLIFY_APP_UUID` = l'identifiant de l'application CoachSen (ligne 3). Ce ne sont pas des secrets.
+
 ## 3 bis. Pipeline GitHub Actions (`.github/workflows/deploy.yml`)
 
 À chaque envoi sur `main` : 1) `ci.yml` (types, lint, tests, compilation Angular) ; 2) construction de trois images (`api`, `web`, `scheduler`) et publication sur GHCR, étiquetées `latest` et par l'identifiant du commit ; 3) le pipeline fixe la variable `IMAGE_TAG` dans Coolify, ordonne le déploiement par l'API de Coolify, puis attend que `/` et `/api/v1/auth/session` répondent 200 (5 minutes au plus). Si une étape échoue, rien de la suite ne part.
