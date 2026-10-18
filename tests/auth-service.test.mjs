@@ -45,7 +45,7 @@ test('auth : les erreurs de saisie gardent leur message et le statut 400', async
   for (const [message, expected] of [
     ['Invalid login credentials', 'Email ou mot de passe incorrect'],
     ['User already registered', 'Un compte existe déjà avec cet email'],
-    ['Password should be at least 6 characters', 'Le mot de passe doit contenir au moins 6 caractères'],
+    ['Password should be at least 6 characters', 'Le mot de passe est trop court : utilisez au moins 10 caractères'],
   ]) {
     authDao.signIn = async () => ({ data: null, error: { message, status: 400 } })
     await assert.rejects(() => authService.login('coach@example.test', 'password'), {
