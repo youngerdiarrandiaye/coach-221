@@ -5,7 +5,10 @@ const AUTH_ERRORS: Record<string, string> = {
   'Invalid login credentials':       'Email ou mot de passe incorrect',
   'Email not confirmed':             'Veuillez confirmer votre email',
   'User already registered':         'Un compte existe déjà avec cet email',
-  'Password should be at least 6':   'Le mot de passe doit contenir au moins 6 caractères',
+  'Password should be at least':     'Le mot de passe est trop court : utilisez au moins 10 caractères',
+  'For security purposes':           'Patientez quelques secondes avant de demander un nouvel e-mail',
+  'Error sending':                   'L’e-mail n’a pas pu être envoyé. Réessayez dans un instant',
+  'password is known to be weak':    'Ce mot de passe est trop courant : choisissez-en un autre',
   'rate limit':                      'Trop de tentatives. Réessayez dans quelques minutes',
 }
 
