@@ -11,6 +11,7 @@ const rule = (name: string, windowSeconds: number, max: number): RateRule => ({ 
 /** Règles du contrat de fiabilisation (B1). */
 export const RATE_RULES = {
   login: rule('login', 600, 10),
+  loginDay: rule('login-day', 86400, 40),   // par compte : freine une attaque répartie sur de nombreuses IP
   register: rule('register', 3600, 5),
   reset: rule('reset', 3600, 5),
   rum: rule('rum', 60, 120),

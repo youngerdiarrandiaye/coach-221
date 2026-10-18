@@ -69,7 +69,7 @@ export async function handleApiRequest(request: Request, context: { params: { pa
       const ip = clientIp(request.headers)
       if (rawId === 'login') {
         const data = loginSchema.parse(body)
-        await limit({ rule: RATE_RULES.login, scope: 'ip', identity: ip }, { rule: RATE_RULES.login, scope: 'email', identity: data.email })
+        await limit({ rule: RATE_RULES.login, scope: 'ip', identity: ip }, { rule: RATE_RULES.login, scope: 'email', identity: data.email }, { rule: RATE_RULES.loginDay, scope: 'email', identity: data.email })
         const { user } = await authService.login(data.email, data.password)
         return success({ user: { id: user.id, email: user.email } })
       }
