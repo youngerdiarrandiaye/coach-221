@@ -19,16 +19,26 @@ Rédigé le 18 octobre 2026. Vérifié en production le même jour.
 - **Vérifié en production** : avec des adresses IP falsifiées (en-tête `X-Forwarded-For`) et des e-mails tous différents, la 6e demande de « mot de passe oublié » est bloquée. L'adresse IP n'est donc pas falsifiable à travers Traefik et Nginx.
 - `RATE_LIMIT_DISABLED=1` désactive tout : réservé aux tests, **jamais en production**.
 
-## Le point faible connu : l'accès direct au Supabase
+## L'accès direct au Supabase : limité depuis le 18 octobre
 
-Le service d'authentification du Supabase (`/auth/v1/token`) n'a **aucune limite de tentatives de son côté** : 40 essais directs de mots de passe ont tous été acceptés lors du test. Le limiteur de l'application ne le protège pas, car un attaquant qui parle au Supabase directement ne passe pas par l'API de CoachSen.
+Le service d'authentification du Supabase (`/auth/v1/token`) peut être appelé directement, sans passer par l'API de CoachSen, avec la clé publique `anon`. Mesure faite en production :
 
-Ce qui limite le risque aujourd'hui : cet accès exige la clé `anon`, que le site Angular ne sert jamais (il ne parle qu'à l'API de CoachSen). Mais une clé `anon` n'est pas conçue pour rester secrète : si elle fuit, la limitation disparaît.
+| | Avant | Après |
+|---|---|---|
+| 45 essais directs de mots de passe depuis une même IP | tous acceptés (aucune limite effective) | bloqués (429) à partir du 32e essai |
+| Connexions normales par l'application | fonctionnent | fonctionnent (leur compteur est séparé) |
 
-Pistes de durcissement, à traiter avant une ouverture large :
-1. Limiter `/auth/v1/token`, `/signup`, `/recover` et `/otp` au niveau de Kong (plugin `rate-limiting`). **Prérequis** : que Kong voie la vraie adresse IP du client (`KONG_TRUSTED_IPS` et `KONG_REAL_IP_HEADER`), faute de quoi tous les clients partagent un seul compteur et un attaquant bloquerait l'application.
-2. Faire parler l'API de CoachSen au Supabase par le réseau interne Docker, puis fermer ces routes depuis Internet (seuls `/auth/v1/verify` pour les liens de confirmation, et les images publiques du stockage doivent rester accessibles).
-3. Régénérer la clé `anon` (donc le secret JWT du Supabase) si elle a été exposée, en la changeant aussi dans les variables GitHub et Coolify.
+Réglages ajoutés au service d'authentification (voir `deploy/supabase/compose.yml`, appliqué par l'API de Coolify) :
+- `GOTRUE_RATE_LIMIT_HEADER=X-Forwarded-For` : le compteur est tenu **par adresse IP réelle**, et non pour Kong (sans cela, tous les clients partageaient un seul compteur, ce qui permettait aussi de bloquer l'application en l'épuisant).
+- `GOTRUE_RATE_LIMIT_TOKEN_REFRESH=30` : 30 connexions ou renouvellements de session par 5 minutes et par adresse IP (150 auparavant).
+- `GOTRUE_PASSWORD_MIN_LENGTH=10` : même longueur minimale que l'application, y compris pour une inscription directe.
+
+À savoir :
+- L'API de CoachSen appelle le Supabase depuis **une seule adresse** : son compteur est partagé par tous les coachs, soit **30 connexions ou renouvellements par 5 minutes pour l'ensemble de l'application**. Suffisant pour des dizaines de coachs ; à relever (`GOTRUE_RATE_LIMIT_TOKEN_REFRESH`) quand l'usage grandit.
+- Le nombre d'e-mails envoyés par le Supabase est plafonné à 30 par heure pour tous (`GOTRUE_RATE_LIMIT_EMAIL_SENT`, valeur par défaut) : à relever lors d'une vague d'inscriptions.
+- Une attaque répartie sur beaucoup d'adresses IP reste possible contre les 40 essais quotidiens par compte de l'application, mais pas contre le Supabase en direct (limité par adresse seulement) : la clé `anon` n'est pas servie aux navigateurs, ce qui limite l'exposition.
+- Pistes restantes, pour plus tard : faire parler l'API au Supabase par le réseau interne Docker et fermer `/auth/v1/token`, `/signup` et `/recover` depuis Internet ; régénérer la clé `anon` si elle a fuité (secret JWT du Supabase, puis variables GitHub et Coolify).
+- Retour arrière : renvoyer le compose précédent par l'API de Coolify (retirer les trois lignes `GOTRUE_RATE_LIMIT_*` et `GOTRUE_PASSWORD_MIN_LENGTH`) puis redéployer.
 
 ## Réglages du Supabase à garder
 
