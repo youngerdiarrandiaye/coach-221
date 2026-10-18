@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<title>Confirmez votre nouvelle adresse e-mail</title>
+</head>
+<body style="margin:0;padding:0;background:#f2f3f5;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f3f5;padding:24px 12px;">
+<tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;">
+<tr><td style="background:#0a0a0a;border-radius:18px 18px 0 0;padding:22px 28px;">
+<span style="font-size:24px;font-weight:800;letter-spacing:-1px;color:#ffffff;">coachsen</span><span style="display:inline-block;width:7px;height:7px;background:#c8f31d;margin-left:3px;"></span>
+</td></tr>
+<tr><td style="background:#ffffff;padding:32px 28px 8px;">
+<h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;color:#0a0a0a;">Confirmez votre nouvelle adresse e-mail</h1>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.55;color:#33363b;">Bonjour{{ if .Data.prenom }} {{ .Data.prenom }}{{ end }},<br>vous avez demandé à utiliser cette adresse pour votre compte CoachSen. Confirmez le changement.</p>
+<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#c8f31d;border-radius:12px;">
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change&amp;next=/dashboard" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#0a0a0a;text-decoration:none;">Confirmer la nouvelle adresse</a>
+</td></tr></table>
+<p style="margin:22px 0 6px;font-size:13px;line-height:1.5;color:#5b6068;">Si vous n’avez rien demandé, votre compte reste inchangé.</p>
+<p style="margin:0 0 22px;font-size:13px;line-height:1.5;color:#5b6068;">Le bouton ne marche pas ? Copiez cette adresse dans votre navigateur :<br><span style="word-break:break-all;color:#33363b;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=email_change&amp;next=/dashboard</span></p>
+</td></tr>
+<tr><td style="background:#ffffff;padding:0 28px 28px;border-radius:0 0 18px 18px;">
+<p style="margin:0;padding-top:16px;border-top:1px solid #e6e8eb;font-size:12px;line-height:1.5;color:#7b8088;">Vous n’êtes pas à l’origine de cette demande ? Ignorez simplement ce message, rien ne changera.<br>CoachSen · pensé pour les coachs du Sénégal.</p>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>

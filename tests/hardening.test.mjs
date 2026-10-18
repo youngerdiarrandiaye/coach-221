@@ -141,6 +141,7 @@ test('crons : routes à authentification propre, jeton Bearer à temps constant,
     assert.equal(hasOwnAuthentication(route), true, route)
     assert.equal(authRedirect(route, false), null, route)
   }
+  assert.equal(hasOwnAuthentication('/auth/confirm'), true, 'le lien des e-mails ouvre sa propre session')
   assert.equal(hasOwnAuthentication('/api/cron/autre'), false)
   assert.equal(hasOwnAuthentication('/api/cron'), false)
   assert.equal(isCronAuthorized('Bearer secret-de-test', 'secret-de-test'), true)
