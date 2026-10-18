@@ -8,6 +8,7 @@ const auth=()=>import('./features/auth.page').then(m=>m.AuthPage);
 export const routes:Routes=[
  {path:'',pathMatch:'full',redirectTo:'dashboard'},
  ...['login','register','reset-password','update-password','check-email'].map(mode=>({path:mode,loadComponent:auth,data:{mode}})),
+ {path:'installer',loadComponent:()=>import('./features/install.page').then(m=>m.InstallPage)},
  {path:'',component:ShellComponent,canActivate:[authenticated],children:[
  {path:'dashboard',loadComponent:()=>import('./features/overview.page').then(m=>m.OverviewPage)},
  {path:'stats',loadComponent:()=>import('./features/overview.page').then(m=>m.OverviewPage),data:{stats:true}},

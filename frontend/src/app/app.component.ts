@@ -15,7 +15,7 @@ import { MoreSheet } from './core/more-sheet';
 import { FocusTrap } from './shared/focus-trap';
 import { coachInitial, coachLabel } from './core/coach-name';
 @Component({selector:'app-root',standalone:true,imports:[RouterOutlet,ToastHost,ConfirmHost],template:'<router-outlet /><app-toast-host /><app-confirm-host />'})
-export class AppComponent { constructor(){ inject(Toast).watchNetwork(); } }
+export class AppComponent { constructor(){ inject(Toast).watchNetwork(); inject(Pwa); } }
 @Component({standalone:true,imports:[RouterOutlet,RouterLink,RouterLinkActive,NavigationToolsComponent,SyncPill,SyncDialog,FocusTrap],template:`
 <a class="skip" href="#main">Aller au contenu</a>
 <div class="workspace">
