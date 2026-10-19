@@ -119,6 +119,14 @@ jobs:
           done
           [ "$ok" = "1" ] || { echo "::error::Coolify a refusé IMAGE_TAG (HTTP $code)"; cat /tmp/r.json; exit 1; }
           echo "Version : ${tag}"
+          # Le jeton du webhook de mise à jour vit dans GitHub : on le recopie dans Coolify pour que l'API le reconnaisse.
+          if [ -n "$DEPLOY_WEBHOOK_SECRET" ]; then
+            body="{\"key\":\"DEPLOY_WEBHOOK_SECRET\",\"value\":\"${DEPLOY_WEBHOOK_SECRET}\",\"is_preview\":false}"
+            api="${COOLIFY_URL%/}/api/v1/${kind}/${COOLIFY_APP_UUID}/envs"
+            code=$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$api" -H "$auth" -H 'Content-Type: application/json' -d "$body")
+            if [ "$code" -ge 300 ]; then code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$api" -H "$auth" -H 'Content-Type: application/json' -d "$body"); fi
+            [ "$code" -lt 300 ] || { echo "::warning::Coolify a refusé DEPLOY_WEBHOOK_SECRET (HTTP $code) : le webhook de mise à jour restera désactivé."; }
+          fi
 
       - name: Déclencher le déploiement dans Coolify
         run: |
