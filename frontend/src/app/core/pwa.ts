@@ -24,6 +24,17 @@ export class Pwa {
       this.canInstall.set(false);
       this.toast.success('Application installée', 'Retrouvez CoachSen sur votre écran d’accueil.');
     });
+    this.clearAppBadge();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.clearAppBadge(); });
+  }
+
+  /** Efface la pastille de l'icône et les notifications déjà vues quand le coach ouvre l'application. */
+  private clearAppBadge() {
+    try {
+      const nav = navigator as Navigator & { clearAppBadge?: () => Promise<void> };
+      void nav.clearAppBadge?.().catch(() => undefined);
+      void navigator.serviceWorker?.getRegistration().then(reg => reg?.getNotifications().then(list => list.forEach(n => n.close())));
+    } catch { /* navigateur sans badge : rien à faire */ }
   }
 
   async install() {

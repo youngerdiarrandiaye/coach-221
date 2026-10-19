@@ -55,10 +55,10 @@ self.addEventListener('fetch', event => {
 /* Un clic sur une notification de rappel ouvre (ou ramène au premier plan) l'application sur la bonne page. */
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  if (event.action === 'dismiss') return;
+  if (event.action === 'dismiss') { event.waitUntil(syncAppBadge()); return; }
   const target = (event.notification.data && event.notification.data.url) || '/dashboard';
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windows => {
+    syncAppBadge().then(() => self.clients.matchAll({ type: 'window', includeUncontrolled: true })).then(windows => {
       for (const client of windows) {
         if ('focus' in client) {
           return (client.navigate ? client.navigate(target) : Promise.resolve()).catch(() => undefined).then(() => client.focus());
@@ -86,5 +86,19 @@ self.addEventListener('push', event => {
     data: { url: data.url || '/dashboard' },
     actions: data.kind === 'test' ? [] : [{ action: 'open', title: 'Ouvrir' }, { action: 'dismiss', title: 'Ignorer' }],
   };
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(self.registration.showNotification(title, options).then(syncAppBadge));
 });
+
+/* Pastille sur l'icône de l'application installée : nombre de notifications non lues
+   (ignorée sans effet là où le navigateur ne gère pas le badge). */
+function syncAppBadge() {
+  return self.registration.getNotifications().then(list => {
+    const nav = self.navigator;
+    if (!nav) return undefined;
+    if (list.length > 0 && nav.setAppBadge) return nav.setAppBadge(list.length);
+    if (list.length === 0 && nav.clearAppBadge) return nav.clearAppBadge();
+    return undefined;
+  }).catch(() => undefined);
+}
+
+self.addEventListener('notificationclose', event => { event.waitUntil(syncAppBadge()); });
