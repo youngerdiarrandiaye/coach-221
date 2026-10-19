@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/entities/database.types'
 import { callbackDestination } from '@/lib/authRoutes'
+import { hardenSessionCookie } from '@/lib/sessionCookie'
 
 /**
  * Confirmation par e-mail avec un jeton (token_hash) : confirmation d'inscription, réinitialisation de mot de passe,
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
         cookies: {
           getAll: () => cookieStore.getAll(),
           setAll: cookiesToSet => {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, hardenSessionCookie(options)))
           },
         },
       },

@@ -23,13 +23,11 @@ TO authenticated
 USING  (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text)
 WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
 
--- 3. Lecture publique (pour afficher les avatars)
+-- 3. Pas de lecture publique par politique : le seau est public, donc un avatar s'affiche par son lien direct,
+--    mais personne ne peut plus LISTER tous les fichiers du seau (la politique de lecture ouverte le permettait).
+--    Un coach lit toujours ses propres fichiers grâce à la politique du point 2.
 DROP POLICY IF EXISTS "avatars_public_read" ON storage.objects;
-CREATE POLICY "avatars_public_read"
-ON storage.objects
-FOR SELECT
-TO public
-USING (bucket_id = 'avatars');
+DROP POLICY IF EXISTS "avatars: public read" ON storage.objects;
 
 -- ============================================================
 -- Seau privé "exports" : rapports PDF partagés par lien signé de 24 h.

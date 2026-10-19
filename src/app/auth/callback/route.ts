@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/entities/database.types'
 import { callbackDestination } from '@/lib/authRoutes'
+import { hardenSessionCookie } from '@/lib/sessionCookie'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
           getAll: () => cookieStore.getAll(),
           setAll: (cookiesToSet) => {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, hardenSessionCookie(options))
             )
           },
         },

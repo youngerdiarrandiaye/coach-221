@@ -8,6 +8,8 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
   images: {
+    // L'API n'utilise pas next/image : l'optimiseur d'images (surface d'attaque connue) est désactivé.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
