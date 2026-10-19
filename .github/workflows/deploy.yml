@@ -67,6 +67,7 @@ jobs:
             NEXT_PUBLIC_SUPABASE_URL=${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL }}
+            APP_VERSION=${{ github.sha }}
 
   deploy:
     needs: images
@@ -81,6 +82,7 @@ jobs:
       COOLIFY_APP_UUID: ${{ secrets.COOLIFY_APP_UUID }}
       COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
       SITE_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
     steps:
       - uses: actions/checkout@v4
 
@@ -136,3 +138,26 @@ jobs:
           done
           echo "::error::Le site ne répond pas correctement après 5 minutes : voir les journaux Coolify, puis revenir à la version précédente (docs/DEPLOIEMENT_COOLIFY.md, section 4)."
           exit 1
+
+      - name: Vérifier la version en ligne
+        run: |
+          # /version.json est écrit à la construction de l'image web : il doit porter le commit qu'on vient de déployer.
+          for i in $(seq 1 12); do
+            live=$(curl -s --max-time 10 "${SITE_URL%/}/version.json" | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')
+            echo "essai $i : version en ligne=${live:-aucune} attendue=${GITHUB_SHA}"
+            [ "$live" = "$GITHUB_SHA" ] && exit 0
+            sleep 10
+          done
+          echo "::error::La version en ligne ne correspond pas au commit déployé : l'ancien conteneur web tourne peut-être encore."
+          exit 1
+
+      - name: Prévenir les applications installées (webhook de mise à jour)
+        # Secondaire : un échec n'annule pas un déploiement réussi. Sans DEPLOY_WEBHOOK_SECRET, l'étape est ignorée.
+        continue-on-error: true
+        run: |
+          if [ -z "$DEPLOY_WEBHOOK_SECRET" ]; then echo "DEPLOY_WEBHOOK_SECRET absent : annonce de mise à jour ignorée (les applications se mettent à jour à leur prochaine ouverture)."; exit 0; fi
+          code=$(curl -sS -o /tmp/hook.json -w '%{http_code}' --max-time 60 -X POST "${SITE_URL%/}/api/deploy-hook" \
+            -H "Authorization: Bearer ${DEPLOY_WEBHOOK_SECRET}" -H 'Content-Type: application/json' \
+            -d "{\"version\":\"${GITHUB_SHA}\"}")
+          echo "webhook : HTTP $code"; cat /tmp/hook.json; echo
+          [ "$code" = "200" ]

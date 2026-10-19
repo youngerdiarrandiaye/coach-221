@@ -72,6 +72,14 @@ Aucune clé de service, clé VAPID ni `CRON_SECRET` dans GitHub : elles restent 
 
 À vérifier au premier déploiement (je n'ai pas pu l'essayer sans accès à votre Coolify) : que l'appel qui fixe `IMAGE_TAG` est accepté par la version 4.4.3, et que les conteneurs repartent bien sur la nouvelle étiquette. Sinon, définir `IMAGE_TAG` à la main dans Coolify puis lancer « Deploy ».
 
+## 3 quater. Mises à jour de l'application installée (à chaque déploiement)
+
+- **Version** : le pipeline passe le commit déployé à l'image web (`APP_VERSION`). Elle l'écrit dans `/version.json` et dans le service worker (`sw.js`), qui change donc à chaque déploiement : le navigateur installe la nouvelle version et purge l'ancien cache.
+- **Côté application** : au retour sur l'écran, toutes les 10 minutes et à l'annonce du webhook, CoachSen compare sa version à `/version.json`. Si elle diffère, un message « Nouvelle version de CoachSen — Actualiser » apparaît ; rien n'est perdu (la file hors ligne est conservée).
+- **Contrôle du pipeline** : après le déploiement, l'étape « Vérifier la version en ligne » échoue si `/version.json` ne porte pas le commit attendu (ancien conteneur encore actif).
+- **Webhook** `POST /api/deploy-hook` (jeton `DEPLOY_WEBHOOK_SECRET`, en-tête `Authorization: Bearer …`, corps `{"version":"<commit>"}`) : envoie une notification push à tous les appareils abonnés. Application ouverte : le message « Actualiser » s'affiche, sans notification. Application fermée : une notification discrète « CoachSen est à jour », remplacée à chaque version. Sans `DEPLOY_WEBHOOK_SECRET`, le webhook est désactivé et l'étape du pipeline est ignorée.
+- **À configurer une fois** : générer un jeton long (`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`), puis le saisir comme secret GitHub `DEPLOY_WEBHOOK_SECRET` ET comme variable d'environnement `DEPLOY_WEBHOOK_SECRET` du service CoachSen dans Coolify (même valeur). Jamais dans Git.
+
 ## 4. Retour arrière
 
 Les deux applications étant séparées, couper CoachSen (arrêter le projet Coolify) ne touche pas l'app de stock. Revenir à une version précédente : dans Coolify, mettre `IMAGE_TAG` sur l'identifiant (7 caractères) d'un commit précédent (chaque image est conservée sous cette étiquette), puis « Redeploy ». Pour la base : restaurer la sauvegarde du §3.1 ou le script `supabase/migrations/down/`.

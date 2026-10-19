@@ -5,6 +5,12 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./
 RUN npx ng build --configuration production
+# Version déployée (identifiant du commit) : écrite dans /version.json et dans le service worker, qui change ainsi
+# à chaque déploiement. Les applications installées détectent la nouvelle version et proposent « Actualiser ».
+ARG APP_VERSION=dev
+RUN case "$APP_VERSION" in *[!A-Za-z0-9._-]*|"") echo "APP_VERSION invalide" >&2; exit 1;; esac \
+ && sed -i "s/__BUILD__/${APP_VERSION}/g" dist/coachsen/browser/sw.js \
+ && printf '{"version":"%s"}' "$APP_VERSION" > dist/coachsen/browser/version.json
 
 FROM nginx:1.27-alpine
 COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf

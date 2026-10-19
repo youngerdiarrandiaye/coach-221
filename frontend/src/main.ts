@@ -8,5 +8,5 @@ applyTheme(storedTheme());
 bootstrapApplication(AppComponent, { providers: [provideHttpClient(), provideRouter(routes, withComponentInputBinding(), withInMemoryScrolling({ anchorScrolling: 'enabled' }))] }).catch(console.error);
 
 if ('serviceWorker' in navigator) {
-  addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js').catch(() => undefined); });
+  addEventListener('load', () => { void navigator.serviceWorker.register('/sw.js', { updateViaCache: 'none' }).catch(() => undefined); });
 }

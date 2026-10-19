@@ -18,7 +18,9 @@ export interface PushPayload {
   body: string
   url: string
   tag: string
-  kind: 'session-reminder' | 'test'
+  kind: 'session-reminder' | 'test' | 'update'
+  /** Version déployée (kind « update » seulement) : le service worker s'en sert pour se mettre à jour. */
+  version?: string
   client?: string
   session?: string
   minutes?: number
@@ -70,6 +72,14 @@ export function sessionPayload(s: UpcomingSession, now: Date): PushPayload {
 export const testPayload = (): PushPayload => ({
   title: 'CoachSen', body: 'Vos rappels de séance fonctionnent.', url: '/', tag: 'test', kind: 'test',
 })
+
+/** Annonce d'une nouvelle version de l'application : envoyée aux appareils abonnés après chaque déploiement réussi. */
+export const updatePayload = (version: string): PushPayload => ({
+  title: 'CoachSen est à jour', body: 'Une nouvelle version est prête. Touchez pour l’ouvrir.', url: '/dashboard', tag: 'coachsen-update', kind: 'update', version,
+})
+
+/** Version acceptée par le webhook : identifiant de commit ou numéro, rien d'autre (elle finit dans une notification). */
+export const validVersion = (value: unknown): value is string => typeof value === 'string' && /^[A-Za-z0-9._-]{1,40}$/.test(value)
 
 /** TTL = secondes jusqu'au début de la séance, au plus 3600. */
 export const ttlSeconds = (startMs: number, nowMs: number) => Math.min(3600, Math.max(0, Math.ceil((startMs - nowMs) / 1000)))
