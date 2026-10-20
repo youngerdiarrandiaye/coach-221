@@ -49,6 +49,8 @@ export class PerfChart {
   mode = input<'bar' | 'line'>('bar');
   unit = input('');
   title = input('Graphique');
+  /** Courbe : l'axe s'ajuste aux valeurs (utile pour un poids qui varie de quelques kg) au lieu de partir de zéro. */
+  fit = input(false);
 
   readonly width = 640;
   readonly height = 240;
@@ -64,12 +66,26 @@ export class PerfChart {
     return Math.ceil(m / step) * step;
   });
   private plotHeight = () => this.height - this.top - this.bottom;
-  private yOf = (value: number) => this.top + this.plotHeight() * (1 - value / this.max());
+  private fitted = computed(() => {
+    const v = this.points().filter(p => (p.value ?? 0) > 0).map(p => p.value as number);
+    if (!this.fit() || this.mode() !== 'line' || !v.length) return null;
+    const lo = Math.min(...v), hi = Math.max(...v), pad = Math.max((hi - lo) * 0.3, 0.5);
+    return { lo: lo - pad, hi: hi + pad };
+  });
+  private yOf = (value: number) => {
+    const f = this.fitted();
+    return this.top + this.plotHeight() * (1 - (f ? (value - f.lo) / (f.hi - f.lo) : value / this.max()));
+  };
   private format(value: number) {
     return new Intl.NumberFormat('fr-SN', { maximumFractionDigits: 1 }).format(value).replace(/[  ]/g, ' ') + (this.unit() ? ' ' + this.unit() : '');
   }
 
-  grid = computed(() => [0, 0.5, 1].map(f => ({ y: this.yOf(this.max() * f), text: new Intl.NumberFormat('fr-SN', { notation: 'compact' }).format(this.max() * f) })));
+  grid = computed(() => {
+    const f = this.fitted();
+    const at = (t: number) => f ? f.lo + (f.hi - f.lo) * t : this.max() * t;
+    const nf = new Intl.NumberFormat('fr-SN', f ? { maximumFractionDigits: 1 } : { notation: 'compact' });
+    return [0, 0.5, 1].map(t => ({ y: this.yOf(at(t)), text: nf.format(at(t)) }));
+  });
 
   bars = computed(() => {
     const pts = this.points();

@@ -49,7 +49,9 @@ export function realClientAccountDeps(): ClientAccountDeps {
     async sendLink(email) {
       // Client sans session ni cookie : l'envoi ne touche pas à la session du coach connecté.
       const publicClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '', { auth: { persistSession: false, autoRefreshToken: false } })
-      const { error } = await publicClient.auth.resetPasswordForEmail(email, { redirectTo: `${siteUrl()}/auth/confirm?next=/update-password` })
+      // Au plus 8 s : un serveur d'e-mail lent ne doit pas bloquer l'enregistrement du client (le coach pourra relancer).
+      const sent = publicClient.auth.resetPasswordForEmail(email, { redirectTo: `${siteUrl()}/auth/confirm?next=/update-password` })
+      const { error } = await Promise.race([sent, new Promise<never>((_, reject) => setTimeout(() => reject(new Error('délai dépassé')), 8000))])
       if (error) throw new Error('envoi impossible')
     },
     async lastSignIn(userId) {

@@ -15,7 +15,8 @@ import { buildJournal, buildWeeks } from '@/lib/clientDigest'
 import { coachLabel } from '@/lib/coachName'
 import { dakarToday } from '@/lib/workoutMath'
 import { handleReport } from './reportExports'
-import { reportDeps } from './exports'
+import { reportDeps as coachReportDeps } from './exports'
+import type { ReportDeps } from './reportExports'
 import { handleTraining } from './training'
 import { HttpError, success } from './http'
 
@@ -27,6 +28,9 @@ export async function findOwnAccount(userId: string): Promise<ClientAccount | nu
   if (error) throw new HttpError(500, 'DATABASE_ERROR', 'Service indisponible.')
   return data as ClientAccount | null
 }
+
+/** Rapport du client : comme celui du coach, mais sans la section des paiements (l'espace client ne montre que les performances). */
+const reportDeps: ReportDeps = { ...coachReportDeps, load: async (coachId, clientId, month) => { const source = await coachReportDeps.load(coachId, clientId, month); return { ...source, pdf: { ...source.pdf, payments: [] } } } }
 
 const methodError = () => { throw new HttpError(405, 'METHOD_NOT_ALLOWED', 'Méthode non autorisée.') }
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/

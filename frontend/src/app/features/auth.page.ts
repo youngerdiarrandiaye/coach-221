@@ -46,7 +46,9 @@ if(this.mode==='register'||this.mode==='update-password')this.form.controls.conf
     await this.router.navigate(['/check-email'],{queryParams:{email:this.form.controls.email.value,from:'register'}});
     this.toast.success('Compte créé','Confirmez votre adresse e-mail pour vous connecter.');
    }else if(this.mode==='update-password'){
-    this.toast.success('Mot de passe enregistré','Vous pouvez vous connecter.');
+    // Le lien de l'e-mail a ouvert la session : le coach va à son tableau de bord, le client à son espace.
+    if(await this.auth.refresh().catch(()=>false)){this.toast.success('Mot de passe enregistré','Bienvenue sur CoachSen.');await this.router.navigateByUrl(this.auth.role()==='client'?'/espace':'/dashboard');}
+    else this.toast.success('Mot de passe enregistré','Vous pouvez vous connecter.');
    }else{
     await this.router.navigate(['/check-email'],{queryParams:{email:this.form.controls.email.value,from:'reset'}});
     this.toast.success('Lien envoyé','Consultez la boîte de réception de '+this.form.controls.email.value+'.');

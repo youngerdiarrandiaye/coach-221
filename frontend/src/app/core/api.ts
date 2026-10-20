@@ -4,7 +4,8 @@ import { firstValueFrom } from 'rxjs';
 import { CanActivateFn, Router } from '@angular/router';
 export type Row = Record<string, unknown> & { id: string };
 export interface User { id: string; email?: string }
-export interface Session { user: User | null; profile: Row | null }
+export type Role = 'coach' | 'client';
+export interface Session { user: User | null; role?: Role; profile: Row | null }
 @Injectable({providedIn:'root'})
 export class Api {
  private http=inject(HttpClient);
@@ -49,11 +50,14 @@ export function describeError(error: unknown): ErrorInfo {
 export function errorText(error: unknown): string { const info = describeError(error); return `${info.message} ${info.hint}`; }
 @Injectable({providedIn:'root'})
 export class Auth {
- private api=inject(Api); user=signal<User|null>(null); profile=signal<Row|null>(null);
- async refresh(){const s=await this.api.get<Session>('auth/session');this.user.set(s.user);this.profile.set(s.profile);return !!s.user;}
- async logout(){await this.api.write('POST','auth/logout');this.user.set(null);this.profile.set(null);}
+ private api=inject(Api); user=signal<User|null>(null); profile=signal<Row|null>(null); role=signal<Role|null>(null);
+ async refresh(){const s=await this.api.get<Session>('auth/session');this.user.set(s.user);this.profile.set(s.profile);this.role.set(s.user?(s.role??'coach'):null);return !!s.user;}
+ async logout(){await this.api.write('POST','auth/logout');this.user.set(null);this.profile.set(null);this.role.set(null);}
 }
-export const authenticated:CanActivateFn=async()=>{const auth=inject(Auth),router=inject(Router);try{return await auth.refresh() || router.createUrlTree(['/login']);}catch{return router.createUrlTree(['/login']);}};
+/** Espace du coach : un client connecté est renvoyé vers son propre espace. */
+export const authenticated:CanActivateFn=async()=>{const auth=inject(Auth),router=inject(Router);try{if(!await auth.refresh())return router.createUrlTree(['/login']);return auth.role()==='client'?router.createUrlTree(['/espace']):true;}catch{return router.createUrlTree(['/login']);}};
+/** Espace du client : réservé aux comptes clients (un coach est renvoyé vers son tableau de bord). */
+export const clientOnly:CanActivateFn=async()=>{const auth=inject(Auth),router=inject(Router);try{if(!await auth.refresh())return router.createUrlTree(['/login']);return auth.role()==='client'?true:router.createUrlTree(['/dashboard']);}catch{return router.createUrlTree(['/login']);}};
 export function money(value:unknown){return new Intl.NumberFormat('fr-SN',{maximumFractionDigits:0}).format(Number(value)||0).replace(/[  ]/g,' ')+' FCFA';}
 /** Libellés lisibles des valeurs techniques (statuts, objectifs, modes de paiement) : accents et casse de phrase. */
 const LABELS:Record<string,string>={PERTE_DE_POIDS:'Perte de poids',PRISE_DE_MASSE:'Prise de masse',CARDIO:'Cardio',TONIFICATION:'Tonification',REMISE_EN_FORME:'Remise en forme',REEDUCATION:'Rééducation légère',AUTRE:'Autre',ESPECES:'Espèces',WAVE:'Wave',ORANGE_MONEY:'Orange Money',PLANIFIEE:'Planifiée',EFFECTUEE:'Effectuée',ANNULEE:'Annulée',PAYE:'Payé',EN_ATTENTE:'En attente',ANNULE:'Annulé',HOMME:'Homme',FEMME:'Femme',QUOTIDIENNE:'Quotidienne',HEBDOMADAIRE:'Hebdomadaire',MENSUELLE:'Mensuelle'};
