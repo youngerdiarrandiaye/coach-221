@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light only">
-<title>Réinitialisez votre mot de passe</title>
+<title>{{ if .Data.espace }}Votre espace CoachSen est prêt{{ else }}Réinitialisez votre mot de passe{{ end }}</title>
 </head>
 <body style="margin:0;padding:0;background:#f2f3f5;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f2f3f5;padding:24px 12px;">
@@ -14,12 +14,12 @@
 <span style="font-size:24px;font-weight:800;letter-spacing:-1px;color:#ffffff;">coachsen</span><span style="display:inline-block;width:7px;height:7px;background:#c8f31d;margin-left:3px;"></span>
 </td></tr>
 <tr><td style="background:#ffffff;padding:32px 28px 8px;">
-<h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;color:#0a0a0a;">Réinitialisez votre mot de passe</h1>
-<p style="margin:0 0 24px;font-size:16px;line-height:1.55;color:#33363b;">Bonjour{{ if .Data.prenom }} {{ .Data.prenom }}{{ end }},<br>vous avez demandé à changer votre mot de passe CoachSen. Touchez le bouton pour en choisir un nouveau.</p>
+<h1 style="margin:0 0 14px;font-size:22px;line-height:1.25;color:#0a0a0a;">{{ if .Data.espace }}Votre espace CoachSen est prêt{{ else }}Réinitialisez votre mot de passe{{ end }}</h1>
+<p style="margin:0 0 24px;font-size:16px;line-height:1.55;color:#33363b;">Bonjour{{ if .Data.prenom }} {{ .Data.prenom }}{{ end }},<br>{{ if .Data.espace }}{{ if .Data.coach }}{{ .Data.coach }} vous a{{ else }}Votre coach vous a{{ end }} ouvert votre espace CoachSen : vous y suivez vos performances, vos statistiques et vos rapports. Choisissez votre mot de passe pour y accéder.{{ else }}vous avez demandé à changer votre mot de passe CoachSen. Touchez le bouton pour en choisir un nouveau.{{ end }}</p>
 <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#c8f31d;border-radius:12px;">
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/update-password" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#0a0a0a;text-decoration:none;">Choisir un nouveau mot de passe</a>
+<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/update-password" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#0a0a0a;text-decoration:none;">{{ if .Data.espace }}Accéder à mon espace{{ else }}Choisir un nouveau mot de passe{{ end }}</a>
 </td></tr></table>
-<p style="margin:22px 0 6px;font-size:13px;line-height:1.5;color:#5b6068;">Ce lien est valable 1 heure et ne sert qu’une fois.</p>
+<p style="margin:22px 0 6px;font-size:13px;line-height:1.5;color:#5b6068;">{{ if .Data.espace }}Ce lien est valable 1 heure et ne sert qu’une fois. Il a expiré ? Sur la page de connexion, touchez « Mot de passe oublié ? » avec cette adresse e-mail.{{ else }}Ce lien est valable 1 heure et ne sert qu’une fois.{{ end }}</p>
 <p style="margin:0 0 22px;font-size:13px;line-height:1.5;color:#5b6068;">Le bouton ne marche pas ? Copiez cette adresse dans votre navigateur :<br><span style="word-break:break-all;color:#33363b;">{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&amp;type=recovery&amp;next=/update-password</span></p>
 </td></tr>
 <tr><td style="background:#ffffff;padding:0 28px 28px;border-radius:0 0 18px 18px;">

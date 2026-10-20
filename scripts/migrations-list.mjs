@@ -12,5 +12,6 @@ export const MIGRATIONS = [
   'migrations/20261014_agenda.sql',
   'migrations/20261015_hardening.sql',
   'migrations/20261016_frequent_activity.sql',
+  'migrations/20261020_client_space.sql',
   'storage.sql',
 ]

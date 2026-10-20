@@ -54,7 +54,7 @@ async function loadReport(coachId: string, id: string, month: string): Promise<R
   }
 }
 
-const reportDeps: ReportDeps = { load: loadReport, storage: () => createAdminSupabaseClient().storage.from('exports') as unknown as ReportStorage }
+export const reportDeps: ReportDeps = { load: loadReport, storage: () => createAdminSupabaseClient().storage.from('exports') as unknown as ReportStorage }
 
 export async function handleExport(request: Request, path: string[], coachId: string, deps: ReportDeps = reportDeps): Promise<Response> {
   const [kind, rawId, operation] = path

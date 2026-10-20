@@ -4,7 +4,7 @@ export const clientSchema = z.object({
   nom:              z.string().min(2, 'Nom requis (2 car. min)').max(50),
   prenom:           z.string().min(2, 'Prénom requis (2 car. min)').max(50),
   telephone:        z.string().min(8, 'Numéro invalide').max(20),
-  email:            z.string().optional(),
+  email:            z.string().trim().email('Adresse e-mail invalide').max(254).or(z.literal('')).optional(),
   date_naissance:   z.string().optional(),
   sexe:             z.enum(['HOMME', 'FEMME']).optional(),
   taille_cm:        z.string().optional(),

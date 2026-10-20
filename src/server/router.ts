@@ -26,6 +26,8 @@ import { rateLimitStore } from '@/dao/rateLimitDao'
 import { clientIp, enforceRateLimits, RATE_RULES, type RateCheck } from '@/lib/rateLimit'
 import { handleActivity, handleClientData, handleFrequentClients, handleSessionTitles } from './clientData'
 import { changeStatus, patchSession, periodFromUrl, scopeFromUrl, withConflicts } from './agenda'
+import { accountUserId, deleteAuthUser, handleInvite, inviteForClient, revokeForClient } from './clientAccounts'
+import { findOwnAccount, handleClientSpace } from './clientSpace'
 
 const num = (v?: string) => v?.trim() ? Number(v) : null
 const str = (v?: string) => v?.trim() || null
@@ -39,14 +41,15 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     const [resource, rawId, operation] = path
     const method = request.method
     const url = new URL(request.url)
-    const known = ['auth', 'clients', 'sessions', 'payments', 'progress', 'recurrences', 'profile', 'stats', 'notifications', 'dashboard', 'search', 'exports', 'exercises', 'workouts', 'records', 'analytics', 'rum', 'push', 'reminders', 'activity', 'voice']
+    const known = ['auth', 'clients', 'sessions', 'payments', 'progress', 'recurrences', 'profile', 'stats', 'notifications', 'dashboard', 'search', 'exports', 'exercises', 'workouts', 'records', 'analytics', 'rum', 'push', 'reminders', 'activity', 'voice', 'me']
     const validShape = resource === 'exports' ? path.length <= 4
       : resource === 'auth' ? path.length === 2
       : resource === 'sessions' && rawId === 'titles' ? path.length === 2 && method === 'GET'
       : resource === 'voice' ? path.length === 2 && rawId === 'parse'
       : resource === 'activity' ? path.length === 1 && method === 'GET'
       : resource === 'clients' && rawId === 'frequent' ? path.length === 2 && method === 'GET'
-      : resource === 'clients' && path.length === 3 ? (operation === 'export' || operation === 'defaults' ? method === 'GET' : operation === 'erase' && method === 'POST')
+      : resource === 'me' ? (path.length === 2 && (rawId === 'overview' || rawId === 'report')) || (path.length === 3 && rawId === 'report' && operation === 'data')
+      : resource === 'clients' && path.length === 3 ? (operation === 'export' || operation === 'defaults' ? method === 'GET' : operation === 'invite' ? ['GET', 'POST', 'DELETE'].includes(method) : operation === 'erase' && method === 'POST')
       : resource === 'sessions' && operation === 'status' ? path.length === 3 && method === 'PATCH'
       : ['clients', 'sessions', 'payments', 'recurrences'].includes(resource) ? path.length <= 2
       : resource === 'progress' ? path.length === 1 || (path.length === 2 && method === 'DELETE')
@@ -62,7 +65,9 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     if (resource === 'auth') {
       if (rawId === 'session' && method === 'GET') {
         const { data: { user } } = await supabase.auth.getUser()
-        return success({ user: user ? { id: user.id, email: user.email } : null, profile: user ? await profileDao.findById(user.id) : null })
+        // Le rôle vient d'app_metadata (écrit par le serveur seulement). Un client n'a pas de profil de coach.
+        const role = user?.app_metadata?.role === 'client' ? 'client' : 'coach'
+        return success({ user: user ? { id: user.id, email: user.email } : null, role, profile: user && role === 'coach' ? await profileDao.findById(user.id) : null })
       }
       if (method !== 'POST') return methodError()
       const body = await readJson(request)
@@ -100,6 +105,15 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     }
     const { data: { user }, error } = await supabase.auth.getUser()
     if (error || !user) throw new HttpError(401, 'UNAUTHENTICATED', 'Connectez-vous pour continuer.')
+    // Un compte client n'accède qu'à son propre espace (lecture seule) ; un coach n'y accède pas.
+    if (user.app_metadata?.role === 'client') {
+      if (resource !== 'me') throw new HttpError(403, 'FORBIDDEN', 'Accès réservé aux coachs.')
+      const account = await findOwnAccount(user.id)
+      if (!account) throw new HttpError(403, 'FORBIDDEN', 'Votre espace n’est plus disponible. Contactez votre coach.')
+      await limit(...(rawId === 'report' && operation !== 'data' ? [{ rule: RATE_RULES.exports, scope: 'client', identity: user.id }] : []))
+      return await handleClientSpace(request, path, account)
+    }
+    if (resource === 'me') throw new HttpError(403, 'FORBIDDEN', 'Cet espace est réservé aux clients.')
     const coachId = user.id
     // Limitation de débit par coach (B1) ; ouverte par défaut si la base est indisponible.
     const checks: RateCheck[] = []
@@ -107,6 +121,7 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     else if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) checks.push({ rule: RATE_RULES.mutations, scope: 'coach', identity: coachId })
     if (resource === 'voice' && method === 'POST') checks.push({ rule: RATE_RULES.voiceMinute, scope: 'coach', identity: coachId }, { rule: RATE_RULES.voiceDay, scope: 'coach', identity: coachId })
     if (resource === 'push' && rawId === 'test') checks.push({ rule: RATE_RULES.pushTest, scope: 'coach', identity: coachId })
+    if (resource === 'clients' && operation === 'invite' && method === 'POST') checks.push({ rule: RATE_RULES.invites, scope: 'coach', identity: coachId })
     if (resource === 'exports' || (resource === 'clients' && operation === 'export')) checks.push({ rule: RATE_RULES.exports, scope: 'coach', identity: coachId })
     await limit(...checks)
     if (resource === 'exports') return await handleExport(request, path.slice(1), coachId)
@@ -123,6 +138,14 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     if (resource === 'activity') return await handleActivity(request)
     if (resource === 'clients' && rawId === 'frequent') return await handleFrequentClients(request)
     const id = rawId ? uuid(rawId) : undefined
+    if (resource === 'clients' && id && operation === 'invite') return await handleInvite(request, id, coachId)
+    if (resource === 'clients' && id && operation === 'erase' && method === 'POST') {
+      // L'effacement supprime le lien d'accès : on retient le compte pour le supprimer ensuite (sinon il resterait orphelin).
+      const accountId = await accountUserId(id)
+      const erased = await handleClientData(request, id, operation, coachId)
+      if (erased.ok && accountId) await deleteAuthUser(accountId).catch(() => console.error('[client] compte de connexion non supprimé'))
+      return erased
+    }
     if (resource === 'clients' && id && operation) return await handleClientData(request, id, operation, coachId)
     const search = z.string().max(100).parse(url.searchParams.get('search') ?? '').replace(/[,().%_]/g, ' ').trim()
     const clientId = url.searchParams.has('clientId') ? uuid(url.searchParams.get('clientId')) : undefined
@@ -156,7 +179,7 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     let result: unknown
     if (method === 'DELETE' && id) {
       switch (resource) {
-        case 'clients': await clientDao.softDelete(id, coachId); break
+        case 'clients': found(await clientDao.findById(id, coachId)); await revokeForClient(id); await clientDao.softDelete(id, coachId); break
         case 'sessions': result = { success: true, ...await agendaDao.remove(id, scopeFromUrl(url)) }; break
         case 'payments': await paymentDao.remove(id, coachId); break
         case 'progress': await progressDao.remove(id, coachId); break
@@ -175,7 +198,13 @@ export async function handleApiRequest(request: Request, context: { params: { pa
           case 'clients': {
             const d = clientSchema.parse(body)
             const payload = { nom: d.nom, prenom: d.prenom, telephone: d.telephone, email: str(d.email), date_naissance: str(d.date_naissance), sexe: d.sexe ?? null, taille_cm: num(d.taille_cm), poids_initial_kg: num(d.poids_initial_kg), objectif: d.objectif ?? null }
-            result = id ? await clientDao.update(id, coachId, payload) : await clientDao.create(coachId, { ...payload, avatar_url: null, actif: true })
+            const before = id ? found(await clientDao.findById(id, coachId)) : null
+            const saved = id ? await clientDao.update(id, coachId, payload) : await clientDao.create(coachId, { ...payload, avatar_url: null, actif: true })
+            const email = payload.email?.toLowerCase() ?? null
+            // Espace client : un lien d'accès part dès qu'une adresse e-mail est enregistrée ; une adresse changée ou retirée coupe l'ancien accès.
+            if (id && before && (before.email?.toLowerCase() ?? null) !== email) await revokeForClient(id)
+            const invitation = saved && email && (!before || (before.email?.toLowerCase() ?? null) !== email) ? await inviteForClient(coachId, { id: saved.id, prenom: saved.prenom, nom: saved.nom, email }) : null
+            result = saved && invitation ? { ...saved, invitation } : saved
             break
           }
           case 'sessions': {
