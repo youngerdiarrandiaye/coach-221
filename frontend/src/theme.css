@@ -787,3 +787,18 @@
   :root:root:root .profile-link span:last-child{display:block;min-width:0;max-width:34vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:700;color:var(--text)}
   :root:root:root .profile-link span:last-child small{display:none}
 }
+
+/* ===== Mobile : connexion épurée (seul le formulaire) et barre du haut fixe ===== */
+:root:root .auth-mobile-brand{display:none}
+@media(max-width:800px){
+  :root:root .auth-wrap{display:flex;flex-direction:column;justify-content:center;min-height:100dvh;padding:calc(24px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom))}
+  :root:root .auth-story,:root:root .auth-card .auth-index,:root:root .auth-card::after{display:none}
+  :root:root .auth-card{align-self:stretch;margin:0 auto;padding:8px 24px;max-width:460px;animation:none}
+  :root:root .auth-mobile-brand{display:inline-flex;align-items:center;font-size:30px;font-weight:800;letter-spacing:-.04em;color:var(--text);margin-bottom:28px}
+  :root:root .auth-mobile-brand .brand-icon{width:40px;height:40px;font-size:19px;border-radius:12px;margin-right:10px}
+  :root:root .auth-mobile-brand .brand-dot{color:var(--accent)}
+  :root:root .auth-card h2{font-size:28px;margin-bottom:8px}
+  :root:root .auth-card>.muted{margin-bottom:12px}
+  :root:root .topbar{position:fixed;top:0;left:0;right:0;z-index:40;height:calc(60px + env(safe-area-inset-top));box-sizing:border-box}
+  :root:root .content{padding-top:calc(60px + env(safe-area-inset-top))}
+}
