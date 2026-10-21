@@ -85,6 +85,7 @@ const joinResults = (results: ArrayLike<ArrayLike<{ transcript: string }>>) => {
           <p class="voice-status" role="status" aria-live="polite">
             @if (phase() === 'listening') { <span class="voice-dot" aria-hidden="true"></span> J’écoute… }
             @else if (phase() === 'loading') { Analyse en cours… }
+            @else if (!supported && ios) { <i class="fa-solid fa-microphone" aria-hidden="true"></i> Touchez le micro en bas à droite du clavier de l’iPhone, puis parlez. Pas de micro sur le clavier ? Réglages > Général > Clavier > Activer la dictée. }
             @else if (!supported) { La dictée n’est pas disponible ici : saisissez votre demande ou dictez-la avec le clavier du téléphone. }
             @else { Dites par exemple : « Paiement de vingt-cinq mille en Wave pour Awa ». }
           </p>
@@ -160,6 +161,7 @@ export class VoiceSheet implements OnDestroy {
   readonly closed = output<void>();
 
   readonly supported = recognitionClass() !== null;
+  readonly ios = isIos();
   phase = signal<Phase>('edit');
   transcript = signal('');
   problem = signal('');
@@ -184,6 +186,8 @@ export class VoiceSheet implements OnDestroy {
   constructor() {
     // Le clic sur le micro est le geste de l'utilisateur : la dictée démarre aussitôt.
     if (this.supported) queueMicrotask(() => this.listen());
+    // Sans dictée du navigateur (iPhone installé…), le clavier s'ouvre aussitôt : son micro dicte dans le champ.
+    else this.refocus();
   }
 
   /** Quand l'élément qui avait le focus disparaît (changement d'état), le focus revient dans la feuille : Échap et Tab restent actifs. */

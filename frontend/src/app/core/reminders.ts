@@ -132,6 +132,8 @@ export class Reminders {
    */
   private async setupPush() {
     if (!this.settings().enabled || !this.settings().system) return;
+    // Jamais par-dessus une fenêtre ouverte (dictée, confirmation…) : on repasse un peu plus tard.
+    if (typeof document !== 'undefined' && document.querySelector('.modal-backdrop, [role=dialog]')) { setTimeout(() => void this.setupPush(), 20_000); return; }
     const recentlyAsked = () => Date.now() - read<number>(PUSH_ASK_KEY, 0) < PUSH_ASK_EVERY_MS;
     if (!this.pushSupported) {
       const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
