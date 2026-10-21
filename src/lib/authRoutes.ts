@@ -6,7 +6,7 @@ export function isPublicRoute(pathname: string): boolean {
 }
 
 export function hasOwnAuthentication(pathname: string): boolean {
-  return pathname === '/auth/callback' || pathname === '/auth/confirm' || pathname === '/api/cron/session-reminders' || pathname === '/api/cron/push-reminders' || pathname === '/api/cron/maintenance' || pathname === '/api/cron/health' || pathname === '/api/deploy-hook' || pathname === '/api/v1' || pathname.startsWith('/api/v1/')
+  return pathname === '/auth/callback' || pathname === '/auth/confirm' || pathname === '/api/cron/session-reminders' || pathname === '/api/cron/push-reminders' || pathname === '/api/cron/maintenance' || pathname === '/api/cron/health' || pathname === '/api/cron/weekly-digest' || pathname === '/api/deploy-hook' || pathname === '/api/v1' || pathname.startsWith('/api/v1/')
 }
 
 export function authRedirect(pathname: string, authenticated: boolean): string | null {

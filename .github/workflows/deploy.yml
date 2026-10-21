@@ -83,6 +83,11 @@ jobs:
       COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
       SITE_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
       DEPLOY_WEBHOOK_SECRET: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_FROM: ${{ secrets.SMTP_FROM }}
     steps:
       - uses: actions/checkout@v4
 
@@ -119,14 +124,18 @@ jobs:
           done
           [ "$ok" = "1" ] || { echo "::error::Coolify a refusé IMAGE_TAG (HTTP $code)"; cat /tmp/r.json; exit 1; }
           echo "Version : ${tag}"
-          # Le jeton du webhook de mise à jour vit dans GitHub : on le recopie dans Coolify pour que l'API le reconnaisse.
-          if [ -n "$DEPLOY_WEBHOOK_SECRET" ]; then
-            body="{\"key\":\"DEPLOY_WEBHOOK_SECRET\",\"value\":\"${DEPLOY_WEBHOOK_SECRET}\",\"is_preview\":false}"
+          # Réglages facultatifs qui vivent dans GitHub (jeton du webhook de mise à jour, serveur d'e-mail du résumé hebdomadaire) :
+          # on les recopie dans Coolify pour que l'API les reconnaisse. Un réglage absent est simplement ignoré.
+          for name in DEPLOY_WEBHOOK_SECRET SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASS SMTP_FROM; do
+            value="${!name:-}"
+            [ -n "$value" ] || continue
+            json=$(printf '%s' "$value" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')   # valeur échappée pour le JSON
+            body=$(printf '{"key":"%s","value":"%s","is_preview":false}' "$name" "$json")
             api="${COOLIFY_URL%/}/api/v1/${kind}/${COOLIFY_APP_UUID}/envs"
             code=$(curl -sS -o /dev/null -w '%{http_code}' -X PATCH "$api" -H "$auth" -H 'Content-Type: application/json' -d "$body")
             if [ "$code" -ge 300 ]; then code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$api" -H "$auth" -H 'Content-Type: application/json' -d "$body"); fi
-            [ "$code" -lt 300 ] || { echo "::warning::Coolify a refusé DEPLOY_WEBHOOK_SECRET (HTTP $code) : le webhook de mise à jour restera désactivé."; }
-          fi
+            [ "$code" -lt 300 ] || echo "::warning::Coolify a refusé $name (HTTP $code) : ce réglage ne sera pas pris en compte."
+          done
 
       - name: Déclencher le déploiement dans Coolify
         run: |

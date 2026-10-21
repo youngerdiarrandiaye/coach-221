@@ -23,6 +23,7 @@ export interface Overview {
   weeks: Week[];
   journal: JournalEntry[];
   months: string[];
+  settings: { weekly_digest: boolean };
 }
 
 /** Données de l'espace client (lecture seule), chargées une fois puis partagées entre les trois pages. */
@@ -42,6 +43,12 @@ export class EspaceStore {
   }
 
   clear() { this.data.set(null); this.error.set(''); }
+
+  /** Résumé du lundi par e-mail : active ou désactive l'envoi (seule écriture de l'espace client). */
+  async setWeeklyDigest(on: boolean) {
+    const saved = await this.api.write<{ weekly_digest: boolean }>('PUT', 'me/settings', { weekly_digest: on });
+    const d = this.data(); if (d) this.data.set({ ...d, settings: { weekly_digest: saved.weekly_digest } });
+  }
 }
 
 export const num = (v: number | null | undefined, digits = 1) => v == null ? '—' : new Intl.NumberFormat('fr-SN', { maximumFractionDigits: digits }).format(v).replace(/[  ]/g, ' ');

@@ -30,6 +30,11 @@ services:
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN}
       CRON_SECRET: ${CRON_SECRET}
       DEPLOY_WEBHOOK_SECRET: ${DEPLOY_WEBHOOK_SECRET:-}   # vide : le webhook de mise à jour est désactivé
+      SMTP_HOST: ${SMTP_HOST:-}                 # résumé hebdomadaire des clients : vide = tâche désactivée
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
       VAPID_SUBJECT: ${VAPID_SUBJECT}

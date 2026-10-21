@@ -18,13 +18,14 @@ import { handleReport } from './reportExports'
 import { reportDeps as coachReportDeps } from './exports'
 import type { ReportDeps } from './reportExports'
 import { handleTraining } from './training'
-import { HttpError, success } from './http'
+import { z } from 'zod'
+import { HttpError, readJson, success } from './http'
 
-export interface ClientAccount { client_id: string; coach_id: string }
+export interface ClientAccount { client_id: string; coach_id: string; user_id?: string; weekly_digest?: boolean }
 
 /** Le compte client de l'utilisateur connecté (sa propre ligne, grâce au RLS), ou null : ce n'est pas un client. */
 export async function findOwnAccount(userId: string): Promise<ClientAccount | null> {
-  const { data, error } = await createServerSupabaseClient().from('client_accounts').select('client_id, coach_id').eq('user_id', userId).maybeSingle()
+  const { data, error } = await createServerSupabaseClient().from('client_accounts').select('user_id, client_id, coach_id, weekly_digest').eq('user_id', userId).maybeSingle()
   if (error) throw new HttpError(500, 'DATABASE_ERROR', 'Service indisponible.')
   return data as ClientAccount | null
 }
@@ -40,7 +41,7 @@ const internal = (path: string, params: Record<string, string>) => new Request(`
 
 async function dataOf(response: Response): Promise<unknown> { return (await response.json() as { data: unknown }).data }
 
-async function overview(account: ClientAccount) {
+export async function overview(account: ClientAccount) {
   const { client_id: clientId, coach_id: coachId } = account
   const today = dakarToday()
   const [client, profile, progressRows, sessionRows, logs, week, month, records] = await Promise.all([
@@ -81,13 +82,24 @@ async function overview(account: ClientAccount) {
     weeks: buildWeeks({ today, sessions: digestSessions, logs: digestLogs, measures: digestMeasures }),
     journal: buildJournal({ today, sessions: digestSessions, logs: digestLogs, measures: digestMeasures }),
     months,
+    settings: { weekly_digest: account.weekly_digest ?? true },
   }
 }
 
-/** me/overview, me/report?month= (PDF) et me/report/data?month= (JSON). Lecture seule. */
+const settingsSchema = z.object({ weekly_digest: z.boolean('Valeur invalide.') })
+
+/** me/overview, me/report?month= (PDF), me/report/data?month= (JSON) : lecture seule. me/settings (PUT) : seule écriture, l'envoi du résumé hebdomadaire. */
 export async function handleClientSpace(request: Request, path: string[], account: ClientAccount): Promise<Response> {
-  if (request.method !== 'GET') return methodError()
   const [, section, operation] = path
+  if (section === 'settings' && path.length === 2) {
+    if (request.method !== 'PUT') return methodError()
+    const { weekly_digest } = settingsSchema.parse(await readJson(request))
+    if (!account.user_id) throw new HttpError(403, 'FORBIDDEN', 'Accès refusé.')
+    const { error } = await createAdminSupabaseClient().from('client_accounts').update({ weekly_digest }).eq('user_id', account.user_id)
+    if (error) throw new HttpError(500, 'DATABASE_ERROR', 'Service indisponible.')
+    return success({ weekly_digest })
+  }
+  if (request.method !== 'GET') return methodError()
   return runWithElevatedClient(createAdminSupabaseClient(), async () => {
     if (section === 'overview' && path.length === 2) return success(await overview(account))
     if (section === 'report' && (path.length === 2 || (path.length === 3 && operation === 'data'))) {

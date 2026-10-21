@@ -85,3 +85,32 @@ export function inviteMessage(result: InviteResult, email: string | null): strin
     case 'NO_EMAIL': return null
   }
 }
+
+/** Nombre maximal de liens envoyés par passage : le serveur d'e-mail limite le débit (30 par heure par défaut). */
+export const INVITE_BATCH = 25
+
+export interface BatchResult { invited: number; mailFailed: number; emailInUse: number; invalid: number; failed: number; remaining: number }
+
+/**
+ * Invite d'un coup les clients qui ont une adresse e-mail et pas encore d'accès. `clients` : fiches actives du coach ;
+ * `withAccount` : identifiants des fiches déjà liées à un compte. Au plus INVITE_BATCH par appel ; le reste est compté.
+ */
+export async function inviteBatch(deps: ClientAccountDeps, coachId: string, coachLabel: string, clients: InviteClient[], withAccount: Set<string>, limit = INVITE_BATCH): Promise<BatchResult> {
+  const pending = clients.filter(c => c.email?.trim() && !withAccount.has(c.id))
+  const batch = pending.slice(0, limit)
+  const result: BatchResult = { invited: 0, mailFailed: 0, emailInUse: 0, invalid: 0, failed: 0, remaining: pending.length - batch.length }
+  for (const client of batch) {
+    try {
+      const r = await inviteClient(deps, coachId, coachLabel, client)
+      if (r.state === 'INVITED' && r.mailSent) result.invited++
+      else if (r.state === 'INVITED') result.mailFailed++
+      else if (r.state === 'EMAIL_IN_USE') result.emailInUse++
+      else if (r.state === 'INVALID_EMAIL') result.invalid++
+      else result.failed++
+    } catch { result.failed++ }
+  }
+  return result
+}
+
+/** Pour le coach : combien de clients attendent encore un lien d'accès (avec adresse e-mail, sans compte). */
+export const countPending = (clients: InviteClient[], withAccount: Set<string>) => clients.filter(c => c.email?.trim() && !withAccount.has(c.id)).length

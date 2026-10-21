@@ -9,6 +9,8 @@ Un client invité par son coach dispose de son propre espace, **en lecture seule
 3. Ensuite il se connecte normalement sur la page de connexion ; son rôle l'envoie directement vers son espace. Un lien expiré (1 heure) se remplace par « Mot de passe oublié ? » avec la même adresse, ou par un renvoi du coach.
 4. Sur la fiche du client, le panneau **Espace client** montre l'état (pas d'accès, invité, actif), permet d'envoyer ou renvoyer le lien (1 par minute et par client, 30 par heure et par coach) et de **retirer l'accès**.
 
+**Clients déjà enregistrés** : sur la liste des clients, un bandeau « N clients sans espace » propose d'envoyer d'un coup les liens à ceux qui ont une adresse e-mail (25 par envoi, 6 envois par heure ; le reste au passage suivant). Les clients sans e-mail ou dont l'adresse a déjà un compte sont comptés à part, rien n'est envoyé deux fois.
+
 L'accès est coupé automatiquement quand le coach supprime le client ou l'efface définitivement, et quand l'adresse e-mail du client est changée (l'ancienne adresse perd l'accès, la nouvelle est invitée).
 
 ## Contenu de l'espace (`/espace`)
@@ -16,6 +18,16 @@ L'accès est coupé automatiquement quand le coach supprime le client ou l'effac
 - **Résumé** : séances du mois, volume, records, assiduité, poids de départ et actuel, prochaines séances, la semaine en cours, le journal des derniers jours.
 - **Progression** : courbe du poids, mesures, volume et séances (7 ou 30 jours), records par exercice.
 - **Rapports** : rapport mensuel (aperçu et PDF, thème de l'application), détail semaine par semaine (8 semaines) et journal quotidien (14 jours).
+
+## Résumé hebdomadaire par e-mail
+
+Chaque **lundi matin** (07:00 à 11:00, heure de Dakar), le client reçoit un e-mail résumant la **dernière semaine terminée** (lundi au dimanche) : séances effectuées sur prévues, séries et volume, poids moyen et écart, prochaines séances, lien vers son espace. Le client peut le désactiver (case « Recevoir mon résumé chaque lundi par e-mail » sur la page Résumé).
+
+- Tâche : `/api/cron/weekly-digest` (jeton `CRON_SECRET`, jamais exposée au public), appelée par le planificateur (`deploy/scheduler.sh`) chaque heure le lundi de 07:00 à 11:00. **Un client n'est servi qu'une fois par semaine** (`client_accounts.last_digest_week`) : un échec d'envoi est retenté à l'heure suivante, jamais de doublon. Par lots de 100 clients.
+- Pas d'e-mail vide : sans séance, série, pesée ni séance à venir, rien n'est envoyé.
+- **Configuration obligatoire (une fois)** : un serveur d'e-mail SMTP pour l'application. Sans elle, la tâche répond 503 et le planificateur l'ignore (signalé une fois dans son journal). Secrets GitHub à créer (le pipeline les recopie dans Coolify) : `SMTP_HOST`, `SMTP_PORT` (587 ou 465), `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` (par exemple `CoachSen <adresse@votre-domaine>`). Avec Gmail : `smtp.gmail.com`, 587, l'adresse Gmail, un mot de passe d'application, et la même adresse en expéditeur.
+  `gh secret set SMTP_HOST --repo <dépôt>` (idem pour les quatre autres ; la valeur est demandée sans s'afficher).
+- Rien d'autre à faire : les e-mails d'invitation et de connexion continuent de passer par le SMTP du Supabase (réglé à part).
 
 ## Sécurité
 

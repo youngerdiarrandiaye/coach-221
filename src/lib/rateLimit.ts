@@ -17,6 +17,7 @@ export const RATE_RULES = {
   rum: rule('rum', 60, 120),
   pushTest: rule('push-test', 3600, 5),
   exports: rule('exports', 600, 30),
+  invitesBatch: rule('invites-batch', 3600, 6),   // invitation en lot (25 clients par appel)
   invites: rule('invites', 3600, 30),       // liens d'accès envoyés aux clients (par coach)
   mutations: rule('mutations', 60, 300),
   voiceMinute: rule('voice-minute', 60, 30),

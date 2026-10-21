@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { display } from '../../core/api';
+import { display, errorText } from '../../core/api';
+import { Toast } from '../../core/toast';
 import { EspaceStore, dayLabel, num, timeLabel } from '../../core/espace-store';
 
 /** Résumé : l'essentiel de la forme du moment (séances, volume, assiduité, poids, prochaines séances, cette semaine). */
@@ -67,10 +68,15 @@ import { EspaceStore, dayLabel, num, timeLabel } from '../../core/espace-store';
           }</ul>
         }
       </section>
+      <section class="panel e-digest">
+        <label class="e-switch"><input type="checkbox" [checked]="d.settings.weekly_digest" [disabled]="savingDigest" (change)="toggleDigest($any($event.target).checked)" />
+          <span><strong>Recevoir mon résumé chaque lundi par e-mail</strong><span class="muted">Vos séances, votre poids et vos prochaines séances de la semaine.</span></span></label>
+      </section>
     }
   `,
   styles: [`
     :host{display:block}
+    .e-digest{margin-top:4px}.e-switch{display:flex;align-items:flex-start;gap:12px;cursor:pointer}.e-switch input{width:22px;height:22px;margin-top:2px;accent-color:var(--accent);flex:none}.e-switch span{display:flex;flex-direction:column;gap:2px}.e-switch .muted{font-size:13px}
     .e-hello{margin-bottom:22px}.e-hello h1{margin:4px 0 6px;font-size:clamp(28px,5vw,40px);letter-spacing:-.03em}
     .e-eyebrow{margin:0;font-size:11px;letter-spacing:.16em;color:var(--accent);font-weight:700}
     .e-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
@@ -91,6 +97,8 @@ import { EspaceStore, dayLabel, num, timeLabel } from '../../core/espace-store';
 })
 export class EspaceResume {
   protected store = inject(EspaceStore);
+  private toast = inject(Toast);
+  savingDigest = false;
   protected display = display; protected num = num; protected dayLabel = dayLabel; protected timeLabel = timeLabel;
   icon = (kind: string) => kind === 'seance' ? 'fa-calendar-check' : kind === 'entrainement' ? 'fa-dumbbell' : 'fa-weight-scale';
 
@@ -104,4 +112,11 @@ export class EspaceResume {
     return { now, start, delta: start === null ? null : Math.round((now - start) * 10) / 10 };
   });
   week = computed(() => this.store.data()?.weeks[0] ?? null);
+
+  async toggleDigest(on: boolean) {
+    this.savingDigest = true;
+    try { await this.store.setWeeklyDigest(on); this.toast.success(on ? 'Résumé activé' : 'Résumé désactivé', on ? 'Vous le recevrez chaque lundi.' : 'Vous ne recevrez plus le résumé du lundi.'); }
+    catch (e) { this.toast.error('Réglage non enregistré', errorText(e)); await this.store.load(true); }
+    finally { this.savingDigest = false; }
+  }
 }

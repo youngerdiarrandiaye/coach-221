@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { buildJournal, buildWeeks, weekStart } from '../src/lib/clientDigest.ts'
-import { accessStatus, inviteClient, inviteMessage, revokeClient, RESEND_DELAY_SECONDS } from '../src/services/clientAccountService.ts'
+import { accessStatus, countPending, inviteBatch, inviteClient, inviteMessage, revokeClient, INVITE_BATCH, RESEND_DELAY_SECONDS } from '../src/services/clientAccountService.ts'
 
 // ---- synthèse hebdomadaire et journal
 const today = '2026-10-21' // mercredi
@@ -117,4 +117,32 @@ test('retrait d’accès et état : supprime le compte, puis plus d’accès ; a
   assert.deepEqual(await accessStatus(deps, 'c1').then(s => [s.state, s.last_sign_in_at]), ['ACTIVE', '2026-10-22T08:00:00Z'])
   assert.equal(await revokeClient(deps, 'c1'), true)
   assert.deepEqual(state.deleted, ['u1']); assert.equal((await accessStatus(deps, 'c1')).state, 'NONE')
+})
+
+test('invitation en lot : seulement les clients avec e-mail et sans accès, par lots, avec le décompte des cas particuliers', async () => {
+  assert.equal(INVITE_BATCH, 25)
+  const { state, deps } = fakeDeps({ state: { taken: ['pris@example.test'] } })
+  const clients = [
+    { id: 'a', prenom: 'A', nom: 'A', email: 'a@example.test' }, { id: 'b', prenom: 'B', nom: 'B', email: 'b@example.test' },
+    { id: 'c', prenom: 'C', nom: 'C', email: null }, { id: 'd', prenom: 'D', nom: 'D', email: 'pris@example.test' },
+    { id: 'e', prenom: 'E', nom: 'E', email: 'pas-un-mail' }, { id: 'f', prenom: 'F', nom: 'F', email: 'deja@example.test' },
+    { id: 'g', prenom: 'G', nom: 'G', email: 'g@example.test' },
+  ]
+  const withAccount = new Set(['f'])
+  assert.equal(countPending(clients, withAccount), 5)       // a, b, d, e, g (c sans e-mail, f déjà lié)
+  const r = await inviteBatch(deps, 'coach1', 'Coach X', clients, withAccount, 3)
+  assert.deepEqual(r, { invited: 2, mailFailed: 0, emailInUse: 1, invalid: 0, failed: 0, remaining: 2 })   // a, b, d traités ; e, g restent
+  assert.deepEqual(state.sent, ['a@example.test', 'b@example.test'])
+  const r2 = await inviteBatch(deps, 'coach1', 'Coach X', clients, new Set(['f', 'a', 'b']), 10)
+  assert.deepEqual(r2, { invited: 1, mailFailed: 0, emailInUse: 1, invalid: 1, failed: 0, remaining: 0 })
+  assert.deepEqual(state.sent.slice(2), ['g@example.test'])
+})
+
+test('invitation en lot : une panne d’envoi ou d’enregistrement ne bloque pas les autres', async () => {
+  const sendFail = fakeDeps({ state: { failSend: true } })
+  const clients = [{ id: 'a', prenom: 'A', nom: 'A', email: 'a@example.test' }, { id: 'b', prenom: 'B', nom: 'B', email: 'b@example.test' }]
+  assert.deepEqual(await inviteBatch(sendFail.deps, 'c', 'C', clients, new Set()), { invited: 0, mailFailed: 2, emailInUse: 0, invalid: 0, failed: 0, remaining: 0 })
+  const dbFail = fakeDeps({ state: { failInsert: true } })
+  assert.deepEqual(await inviteBatch(dbFail.deps, 'c', 'C', clients, new Set()), { invited: 0, mailFailed: 0, emailInUse: 0, invalid: 0, failed: 2, remaining: 0 })
+  assert.equal(dbFail.state.users.size, 0)
 })

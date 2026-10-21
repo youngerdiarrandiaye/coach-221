@@ -3,7 +3,7 @@ import { createAdminSupabaseClient } from '@/config/supabase.admin'
 import { clientDao } from '@/dao/clientDao'
 import { profileDao } from '@/dao/profileDao'
 import { coachLabel } from '@/lib/coachName'
-import { accessStatus, inviteClient, inviteMessage, revokeClient, type ClientAccountDeps, type InviteClient, type InviteResult } from '@/services/clientAccountService'
+import { accessStatus, countPending, inviteBatch, inviteClient, inviteMessage, revokeClient, type ClientAccountDeps, type InviteClient, type InviteResult } from '@/services/clientAccountService'
 import { found, HttpError, success } from './http'
 
 const methodError = () => { throw new HttpError(405, 'METHOD_NOT_ALLOWED', 'Méthode non autorisée.') }
@@ -82,6 +82,17 @@ export async function accountUserId(clientId: string): Promise<string | null> {
 }
 
 export async function deleteAuthUser(userId: string) { await realClientAccountDeps().deleteUser(userId) }
+
+/** clients/invite-missing : GET combien de clients attendent un lien, POST les invite d'un coup (par lots). */
+export async function handleInviteMissing(request: Request, coachId: string): Promise<Response> {
+  if (request.method !== 'GET' && request.method !== 'POST') return methodError()
+  const clients = (await clientDao.findAll(coachId)).map(c => ({ id: c.id, prenom: c.prenom, nom: c.nom, email: c.email }))
+  const { data, error } = await createAdminSupabaseClient().from('client_accounts').select('client_id').eq('coach_id', coachId)
+  if (error) throw new HttpError(500, 'DATABASE_ERROR', 'Service indisponible.')
+  const withAccount = new Set((data ?? []).map(row => row.client_id as string))
+  if (request.method === 'GET') return success({ pending: countPending(clients, withAccount), withoutEmail: clients.filter(c => !c.email?.trim()).length })
+  return success(await inviteBatch(realClientAccountDeps(), coachId, await labelOf(coachId), clients, withAccount))
+}
 
 /** clients/:id/invite : GET état de l'accès, POST envoi ou relance du lien, DELETE retrait de l'accès. */
 export async function handleInvite(request: Request, clientId: string, coachId: string): Promise<Response> {

@@ -1,7 +1,9 @@
 #!/bin/sh
 # Remplace les tâches planifiées de Vercel (vercel.json) : appelle les routes /api/cron/* par le réseau interne,
 # avec le jeton CRON_SECRET. Jamais exposé au public (nginx renvoie 404 sur /api/cron/).
-# Rythme : push-reminders chaque minute, session-reminders toutes les 15 minutes, maintenance à 03:00 (heure de Dakar = UTC).
+# Rythme : push-reminders chaque minute, session-reminders toutes les 15 minutes, maintenance à 03:00 (heure de Dakar = UTC),
+# résumé hebdomadaire des clients le lundi à 07:00, 08:00, 09:00, 10:00 et 11:00 (les passages suivants ne servent que les clients
+# qui restent à servir : l'envoi est unique par client et par semaine).
 #
 # Journal : un succès ne s'écrit pas. Un 503 (« configuration incomplète », ex. WhatsApp non configuré, facultatif)
 # n'est signalé qu'UNE fois par tâche tant qu'il dure ; tout autre échec est écrit à chaque fois.
@@ -33,6 +35,7 @@ while true; do
   call push-reminders
   [ $((i % 15)) -eq 0 ] && call session-reminders
   [ "$(date -u +%H%M)" = "0300" ] && call maintenance
+  if [ "$(date -u +%u%M)" = "100" ]; then h=$(date -u +%H); [ "$h" -ge 7 ] && [ "$h" -le 11 ] && call weekly-digest; fi
   touch /tmp/alive
   i=$((i + 1))
   sleep 60

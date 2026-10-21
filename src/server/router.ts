@@ -26,7 +26,7 @@ import { rateLimitStore } from '@/dao/rateLimitDao'
 import { clientIp, enforceRateLimits, RATE_RULES, type RateCheck } from '@/lib/rateLimit'
 import { handleActivity, handleClientData, handleFrequentClients, handleSessionTitles } from './clientData'
 import { changeStatus, patchSession, periodFromUrl, scopeFromUrl, withConflicts } from './agenda'
-import { accountUserId, deleteAuthUser, handleInvite, inviteForClient, revokeForClient } from './clientAccounts'
+import { accountUserId, deleteAuthUser, handleInvite, handleInviteMissing, inviteForClient, revokeForClient } from './clientAccounts'
 import { findOwnAccount, handleClientSpace } from './clientSpace'
 
 const num = (v?: string) => v?.trim() ? Number(v) : null
@@ -48,7 +48,8 @@ export async function handleApiRequest(request: Request, context: { params: { pa
       : resource === 'voice' ? path.length === 2 && rawId === 'parse'
       : resource === 'activity' ? path.length === 1 && method === 'GET'
       : resource === 'clients' && rawId === 'frequent' ? path.length === 2 && method === 'GET'
-      : resource === 'me' ? (path.length === 2 && (rawId === 'overview' || rawId === 'report')) || (path.length === 3 && rawId === 'report' && operation === 'data')
+      : resource === 'clients' && rawId === 'invite-missing' ? path.length === 2 && (method === 'GET' || method === 'POST')
+      : resource === 'me' ? (path.length === 2 && (rawId === 'overview' || rawId === 'report' || (rawId === 'settings' && method === 'PUT'))) || (path.length === 3 && rawId === 'report' && operation === 'data')
       : resource === 'clients' && path.length === 3 ? (operation === 'export' || operation === 'defaults' ? method === 'GET' : operation === 'invite' ? ['GET', 'POST', 'DELETE'].includes(method) : operation === 'erase' && method === 'POST')
       : resource === 'sessions' && operation === 'status' ? path.length === 3 && method === 'PATCH'
       : ['clients', 'sessions', 'payments', 'recurrences'].includes(resource) ? path.length <= 2
@@ -110,7 +111,7 @@ export async function handleApiRequest(request: Request, context: { params: { pa
       if (resource !== 'me') throw new HttpError(403, 'FORBIDDEN', 'Accès réservé aux coachs.')
       const account = await findOwnAccount(user.id)
       if (!account) throw new HttpError(403, 'FORBIDDEN', 'Votre espace n’est plus disponible. Contactez votre coach.')
-      await limit(...(rawId === 'report' && operation !== 'data' ? [{ rule: RATE_RULES.exports, scope: 'client', identity: user.id }] : []))
+      await limit(...(rawId === 'report' && operation !== 'data' ? [{ rule: RATE_RULES.exports, scope: 'client', identity: user.id }] : rawId === 'settings' ? [{ rule: RATE_RULES.mutations, scope: 'client', identity: user.id }] : []))
       return await handleClientSpace(request, path, account)
     }
     if (resource === 'me') throw new HttpError(403, 'FORBIDDEN', 'Cet espace est réservé aux clients.')
@@ -121,6 +122,7 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     else if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) checks.push({ rule: RATE_RULES.mutations, scope: 'coach', identity: coachId })
     if (resource === 'voice' && method === 'POST') checks.push({ rule: RATE_RULES.voiceMinute, scope: 'coach', identity: coachId }, { rule: RATE_RULES.voiceDay, scope: 'coach', identity: coachId })
     if (resource === 'push' && rawId === 'test') checks.push({ rule: RATE_RULES.pushTest, scope: 'coach', identity: coachId })
+    if (resource === 'clients' && rawId === 'invite-missing' && method === 'POST') checks.push({ rule: RATE_RULES.invitesBatch, scope: 'coach', identity: coachId })
     if (resource === 'clients' && operation === 'invite' && method === 'POST') checks.push({ rule: RATE_RULES.invites, scope: 'coach', identity: coachId })
     if (resource === 'exports' || (resource === 'clients' && operation === 'export')) checks.push({ rule: RATE_RULES.exports, scope: 'coach', identity: coachId })
     await limit(...checks)
@@ -137,6 +139,7 @@ export async function handleApiRequest(request: Request, context: { params: { pa
     if (resource === 'sessions' && rawId === 'titles') return await handleSessionTitles(request)
     if (resource === 'activity') return await handleActivity(request)
     if (resource === 'clients' && rawId === 'frequent') return await handleFrequentClients(request)
+    if (resource === 'clients' && rawId === 'invite-missing') return await handleInviteMissing(request, coachId)
     const id = rawId ? uuid(rawId) : undefined
     if (resource === 'clients' && id && operation === 'invite') return await handleInvite(request, id, coachId)
     if (resource === 'clients' && id && operation === 'erase' && method === 'POST') {

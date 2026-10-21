@@ -16,6 +16,7 @@ const files = [
   ['20261015000100_hardening.sql', 'migrations/20261015_hardening.sql'],
   ['20261016000100_frequent_activity.sql', 'migrations/20261016_frequent_activity.sql'],
   ['20261020000100_client_space.sql', 'migrations/20261020_client_space.sql'],
+  ['20261021000100_client_digest.sql', 'migrations/20261021_client_digest.sql'],
 ]
 for (const [target, source] of files) {
   const content = await readFile(new URL('supabase/' + source, root))
