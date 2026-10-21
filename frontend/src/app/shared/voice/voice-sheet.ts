@@ -41,9 +41,31 @@ interface SpeechRecognitionLike {
   onresult: ((e: any) => void) | null; onerror: ((e: any) => void) | null; onend: (() => void) | null;
   start(): void; stop(): void; abort(): void;
 }
+const isIos = () => typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
+/** Application ajoutée à l'écran d'accueil (iPhone : « standalone », ailleurs : mode d'affichage autonome). */
+const isInstalled = () => typeof window !== 'undefined' && ((navigator as any).standalone === true || window.matchMedia?.('(display-mode: standalone)').matches === true);
 const recognitionClass = (): (new () => SpeechRecognitionLike) | null => {
   const w = typeof window !== 'undefined' ? (window as any) : null;
+  // iPhone : la reconnaissance vocale du navigateur n'existe pas dans une application ajoutée à l'écran d'accueil
+  // (la classe est présente mais ne démarre jamais) : on passe directement à la saisie et au micro du clavier.
+  if (isIos() && isInstalled()) return null;
   return w?.SpeechRecognition ?? w?.webkitSpeechRecognition ?? null;
+};
+
+/** Le micro est refusé : où l'autoriser, selon le téléphone. */
+const micHelp = () => isIos()
+  ? 'Le micro est refusé. Réglages de l’iPhone > Safari > Micro : autorisez ce site, ou touchez le micro du clavier.'
+  : 'Le micro est refusé. Autorisez-le : réglages du téléphone > Applications > Chrome (ou CoachSen) > Autorisations > Micro. Ou touchez le micro du clavier.';
+
+/** Texte de la dictée : certains Android renvoient des résultats cumulés (« bonjour », « bonjour Awa ») ; on garde le plus complet. */
+const joinResults = (results: ArrayLike<ArrayLike<{ transcript: string }>>) => {
+  let text = '';
+  for (let i = 0; i < results.length; i++) {
+    const part = (results[i][0]?.transcript ?? '').trim();
+    if (!part) continue;
+    text = part.toLowerCase().startsWith(text.toLowerCase()) && text ? part : (text ? text + ' ' + part : part);
+  }
+  return text;
 };
 
 /** Feuille « Dictée » : le coach parle ou écrit, l'IA propose, le formulaire s'ouvre prérempli. Rien n'est enregistré ici. */
@@ -73,6 +95,7 @@ const recognitionClass = (): (new () => SpeechRecognitionLike) | null => {
           @if (problem()) {
             <p class="error voice-problem" role="alert">{{ problem() }}</p>
           }
+          <p class="voice-hint"><i class="fa-solid fa-keyboard" aria-hidden="true"></i> Astuce : le micro du clavier de votre téléphone dicte aussi dans ce champ.</p>
 
           <div class="actions voice-actions">
             @if (phase() === 'listening') {
@@ -185,21 +208,20 @@ export class VoiceSheet implements OnDestroy {
     rec.lang = 'fr-FR'; rec.continuous = false; rec.interimResults = true; rec.maxAlternatives = 1;
     rec.onresult = e => {
       if (this.rec !== rec) return;
-      let text = '';
-      for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript;
-      this.transcript.set(text.trim());
+      this.transcript.set(joinResults(e.results).trim());
     };
     rec.onerror = e => {
       if (this.rec !== rec) return;
       this.recError = String(e?.error ?? 'error');
       if (this.recError === 'aborted') return;
       this.problem.set(({
-        'not-allowed': 'Le micro est refusé. Autorisez-le dans le navigateur, ou saisissez votre demande ci-dessous.',
-        'service-not-allowed': 'Le micro est refusé. Autorisez-le dans le navigateur, ou saisissez votre demande ci-dessous.',
+        'not-allowed': micHelp(),
+        'service-not-allowed': micHelp(),
         'no-speech': 'Je n’ai rien entendu. Réessayez avec « Dicter », ou saisissez votre demande.',
         'audio-capture': 'Aucun micro détecté. Saisissez votre demande ci-dessous.',
-        'network': 'La dictée du navigateur est indisponible sans connexion. Saisissez votre demande ci-dessous.',
-      } as Record<string, string>)[this.recError] ?? 'La dictée a échoué. Saisissez votre demande ci-dessous.');
+        'network': 'La dictée a besoin d’une bonne connexion internet (elle passe par le service de reconnaissance du téléphone). Réessayez, ou touchez le micro du clavier.',
+        'language-not-supported': 'Le français n’est pas disponible pour la dictée sur ce téléphone. Touchez le micro du clavier.',
+      } as Record<string, string>)[this.recError] ?? `La dictée a échoué (code : ${this.recError}). Touchez le micro du clavier du téléphone, ou saisissez votre demande.`);
     };
     rec.onend = () => {
       if (this.rec !== rec) return;
