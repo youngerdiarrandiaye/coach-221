@@ -14,6 +14,8 @@ export interface ReminderSettings {
 
 const SETTINGS_KEY = 'coachsen.reminders';
 const FIRED_KEY = 'coachsen.reminders.fired';
+const PUSH_ASK_KEY = 'coachsen.push.ask';
+const PUSH_ASK_EVERY_MS = 7 * 86_400_000;
 const DEFAULTS: ReminderSettings = { enabled: true, offsets: [30], system: true };
 const MAX_OFFSET = 24 * 60;
 
@@ -96,6 +98,8 @@ export class Reminders {
     this.started = true;
     void this.syncFromServer().then(() => this.refresh());
     void this.refreshPushState();
+    // Alertes hors application : mises en route d'elles-mêmes (un appui suffit), un peu après l'ouverture pour ne pas gêner l'écran.
+    setTimeout(() => void this.setupPush(), 4000);
     setInterval(() => this.tick(), 20_000);
     setInterval(() => void this.refresh(), 120_000);
     document.addEventListener('visibilitychange', () => {
@@ -117,6 +121,42 @@ export class Reminders {
   removeOffset(minutes: number) {
     const current = this.settings();
     this.save({ ...current, offsets: current.offsets.filter(n => n !== minutes) });
+  }
+
+  /**
+   * Alertes de séance même application fermée, avec le nombre de messages sur l'icône (pastille).
+   * - déjà autorisé : l'appareil est (ré)abonné sans rien demander ;
+   * - pas encore demandé : un message propose « Activer » (un appui), puis ne revient pas avant 7 jours ;
+   * - iPhone sans l'application installée : on propose de l'installer (sans cela le téléphone ne reçoit pas les alertes) ;
+   * - refusé par le coach : on ne redemande jamais (réglage du téléphone).
+   */
+  private async setupPush() {
+    if (!this.settings().enabled || !this.settings().system) return;
+    const recentlyAsked = () => Date.now() - read<number>(PUSH_ASK_KEY, 0) < PUSH_ASK_EVERY_MS;
+    if (!this.pushSupported) {
+      const ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const installed = (navigator as Navigator & { standalone?: boolean }).standalone === true || matchMedia('(display-mode: standalone)').matches;
+      if (ios && !installed && !recentlyAsked()) {
+        write(PUSH_ASK_KEY, Date.now());
+        this.toast.info('Alertes de séance', 'Sur iPhone, ajoutez CoachSen à l’écran d’accueil pour les recevoir, avec le nombre sur l’icône.', { persistent: true, key: 'push-ask', action: { label: 'Voir comment', run: () => void this.router.navigateByUrl('/installer') } });
+      }
+      return;
+    }
+    await this.refreshPushState();
+    const permission = this.permission();
+    if (permission === 'granted') { await this.enablePush(); return; }
+    if (permission !== 'default' || recentlyAsked()) return;
+    write(PUSH_ASK_KEY, Date.now());
+    this.toast.info('Alertes de séance', 'Recevez-les même application fermée, avec le nombre de messages sur l’icône.', { persistent: true, key: 'push-ask', action: { label: 'Activer', run: () => void this.activateFromPrompt() } });
+  }
+
+  /** Appelée par l'appui sur « Activer » : le geste du coach autorise la demande de permission du téléphone. */
+  private async activateFromPrompt() {
+    const result = await this.enablePush();
+    if (result === 'ok') this.toast.success('Alertes activées', 'Vous recevrez vos alertes de séance même application fermée.');
+    else if (result === 'denied') this.toast.error('Notifications bloquées', 'Autorisez les notifications pour CoachSen dans les réglages du téléphone.');
+    else if (result === 'not-configured') this.toast.error('Alertes indisponibles', 'Le service d’alertes n’est pas encore configuré. Réessayez plus tard.');
+    else this.toast.error('Activation impossible', 'Réessayez depuis Profil, section Rappels.');
   }
 
   async refreshPushState() {
