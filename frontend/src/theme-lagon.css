@@ -5,7 +5,7 @@
 :root:root[data-theme=lagon] .note-star{color:#5fc9d218}
 :root:root[data-theme=lagon] .status-dot{box-shadow:0 0 0 4px #5fc9d222}
 :root:root[data-theme=lagon] .item-avatar{background:#12302f}
-:root:root[data-theme=lagon] .pill[data-tone=ok]{background:#12302f}
+:root:root[data-theme=lagon] .pill[data-tone=ok]{background:#12302f;color:var(--accent);border-color:#5fc9d266}
 :root:root[data-theme=lagon] .paid{background:#12302f}
 :root:root[data-theme=lagon] .hero-button:hover{background:#86dde4}
 :root:root[data-theme=lagon] .track-art{background:linear-gradient(130deg,#0d1b1c,#1f4a4e)}

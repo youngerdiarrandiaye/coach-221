@@ -1,0 +1,92 @@
+/* ============================================================================================
+   Kit thèmes CoachSen : trois thèmes prêts à coller dans une autre application.
+   Nuit citron (sombre, vert citron), Corail (clair, rose et orange), Lagon (sombre, turquoise).
+
+   Utilisation : copier ce fichier, puis poser l'attribut sur <html> :
+     <html>                    -> Nuit citron (thème par défaut)
+     <html data-theme="corail">
+     <html data-theme="lagon">
+   Toutes les couleurs de l'interface viennent de ces variables : changez-les ici, tout suit.
+   ============================================================================================ */
+
+/* ---- Nuit citron (défaut) ---- */
+:root,
+:root[data-theme="nuit"] {
+  --bg: #0a0a0a;            /* fond de page */
+  --surface: #121212;       /* cartes, panneaux */
+  --surface-2: #1b1b1b;     /* champs, puces, zones en retrait */
+  --surface-3: #252525;     /* survol, séparateurs épais */
+  --edge: #2a2a2a;          /* bordures et filets */
+  --text: #f2f2f2;          /* texte principal */
+  --soft: #9b9b9b;          /* texte secondaire */
+  --accent: #c8f31d;        /* couleur de marque : boutons, liens actifs, graphiques */
+  --on-accent: #0a0a0a;     /* texte posé sur --accent */
+  --grad: #c8f31d;          /* aplat de mise en avant (carte principale) */
+  --glow: radial-gradient(120% 90% at 100% 0%, #c8f31d26 0%, #c8f31d00 55%);  /* halo discret en coin de carte */
+  --theme-color: #0a0a0a;   /* barre du navigateur (meta theme-color) */
+  color-scheme: dark;
+}
+
+/* ---- Corail ---- */
+:root[data-theme="corail"] {
+  --bg: #fbf6f8;
+  --surface: #ffffff;
+  --surface-2: #f7eef2;
+  --surface-3: #f0e3ea;
+  --edge: #eadde4;
+  --text: #1d1620;
+  --soft: #7d6f78;
+  --accent: #ff1f6b;
+  --on-accent: #ffffff;
+  --grad: linear-gradient(160deg, #ff1f6b 0%, #ff6a4d 60%, #ff9f43 100%);
+  --glow: radial-gradient(120% 90% at 100% 0%, #ff1f6b14 0%, #ff1f6b00 55%);
+  --theme-color: #fff4f6;
+  color-scheme: light;
+}
+
+/* ---- Lagon ---- */
+:root[data-theme="lagon"] {
+  --bg: #0c0d0e;
+  --surface: #161819;
+  --surface-2: #1e2123;
+  --surface-3: #272b2d;
+  --edge: #2c3133;
+  --text: #f2f5f6;
+  --soft: #8f9c9f;
+  --accent: #5fc9d2;
+  --on-accent: #062a2e;
+  --grad: linear-gradient(160deg, #3b8a92 0%, #2b6870 100%);
+  --glow: radial-gradient(120% 90% at 100% 0%, #5fc9d226 0%, #5fc9d200 55%);
+  --theme-color: #0c0d0e;
+  color-scheme: dark;
+}
+
+/* ============================================================================================
+   Base minimale : de quoi voir tout de suite le rendu des thèmes (à remplacer par vos composants).
+   ============================================================================================ */
+:root {
+  --font: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;  /* police de CoachSen : npm i @fontsource/plus-jakarta-sans */
+  --radius-card: 22px;       /* cartes, fenêtres */
+  --radius-field: 14px;      /* champs de saisie */
+  --radius-pill: 999px;      /* boutons, puces, onglets */
+  --tap: 48px;               /* hauteur minimale d'une cible tactile */
+}
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); }
+a { color: var(--accent); }
+.muted { color: var(--soft); }
+
+.card { background: var(--surface); border: 1px solid var(--edge); border-radius: var(--radius-card); padding: 20px; }
+.card.featured { background: var(--grad); border-color: transparent; color: var(--on-accent); }
+.card.glow { background-image: var(--glow); }
+
+.btn { min-height: var(--tap); padding: 0 22px; border-radius: var(--radius-pill); border: 1px solid var(--edge);
+       background: var(--surface-2); color: var(--text); font: inherit; font-weight: 700; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:focus-visible, .field:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 2px; }
+
+.field { width: 100%; box-sizing: border-box; min-height: var(--tap); padding: 0 14px; border-radius: var(--radius-field);
+         border: 1px solid var(--edge); background: var(--surface-2); color: var(--text); font: inherit; }
+
+.pill { display: inline-block; padding: 4px 12px; border-radius: var(--radius-pill); font-size: 13px; font-weight: 700;
+        background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--accent);
+        border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
